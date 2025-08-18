@@ -1,5 +1,5 @@
-// biome-ignore lint/style/noNamespaceImport: <explanation>
 import "dotenv/config";
+// biome-ignore lint/style/noNamespaceImport: Required for jest-dom matchers
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup } from "@testing-library/react";
 import { afterEach, expect } from "vitest";

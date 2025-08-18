@@ -1,0 +1,33 @@
+# Source and development files
+src/
+stories/
+tests/
+docs/
+coverage/
+storybook-static/
+.storybook/
+
+# Configuration files
+.github/
+.vscode/
+.claude/
+biome.json
+components.json
+lefthook.yml
+registry.json
+tsconfig.json
+tsup.config.ts
+vite.config.ts
+vitest.config.mts
+
+# Documentation
+ARCHITECTURE.md
+CLAUDE.md
+
+# Build artifacts
+*.log
+*.tgz
+.DS_Store
+
+# Keep only dist folder and essential files
+# (README.md, LICENSE, package.json are automatically included)

@@ -1,0 +1,127 @@
+{
+	"$schema": "https://ui.shadcn.com/schema/registry.json",
+	"name": "@astrify/react-s3-upload",
+	"homepage": "https://github.com/astrify/react-s3-upload",
+	"items": [
+		{
+			"name": "file-dropzone",
+			"type": "registry:component",
+			"title": "File Dropzone",
+			"description": "A flexible file dropzone component with drag-and-drop support, file validation, and context integration.",
+			"dependencies": [
+				"react-dropzone",
+				"lucide-react",
+				"clsx",
+				"tailwind-merge",
+				"sonner"
+			],
+			"registryDependencies": [],
+			"files": [
+				{
+					"path": "src/components/FileDropzone.tsx",
+					"type": "registry:component"
+				}
+			],
+			"tailwind": {
+				"config": {}
+			},
+			"cssVars": {},
+			"categories": ["upload", "form"],
+			"docs": "This component requires @astrify/react-s3-upload to be installed for the FileUploadProvider context."
+		},
+		{
+			"name": "file-errors",
+			"type": "registry:component",
+			"title": "File Errors",
+			"description": "Error handler component that displays errors as toast notifications using sonner.",
+			"dependencies": ["sonner"],
+			"registryDependencies": [],
+			"files": [
+				{
+					"path": "src/components/FileErrors.tsx",
+					"type": "registry:component"
+				}
+			],
+			"tailwind": {
+				"config": {}
+			},
+			"cssVars": {},
+			"categories": ["upload", "feedback"],
+			"docs": "This component displays errors as toast notifications using sonner.\\n\\nUsage:\\n```tsx\\n// Basic usage\\n<FileErrors />\\n\\n// With custom position and duration\\n<FileErrors position=\\\"top-center\\\" duration={3000} />\\n```\\n\\n**Important**: You must have a `<Toaster />` component from sonner in your app for toasts to appear:\\n```tsx\\nimport { Toaster } from 'sonner';\\n\\n// In your app root\\n<Toaster position=\\\"bottom-right\\\" richColors />\\n```"
+		},
+		{
+			"name": "file-header",
+			"type": "registry:component",
+			"title": "File Header",
+			"description": "A header component for file upload UI with file count and actions.",
+			"dependencies": ["lucide-react", "clsx", "tailwind-merge"],
+			"registryDependencies": ["button"],
+			"files": [
+				{
+					"path": "src/components/FileHeader.tsx",
+					"type": "registry:component"
+				}
+			],
+			"tailwind": {
+				"config": {}
+			},
+			"cssVars": {},
+			"categories": ["upload", "navigation"],
+			"docs": "This component requires @astrify/react-s3-upload to be installed for the FileUploadProvider context."
+		},
+		{
+			"name": "file-list",
+			"type": "registry:component",
+			"title": "File List",
+			"description": "A list-based file display component showing upload status, progress, and error handling.",
+			"dependencies": ["lucide-react", "clsx", "tailwind-merge"],
+			"registryDependencies": ["button"],
+			"files": [
+				{
+					"path": "src/components/FileList.tsx",
+					"type": "registry:component"
+				}
+			],
+			"tailwind": {
+				"config": {}
+			},
+			"cssVars": {},
+			"categories": ["upload", "display"],
+			"docs": "This component requires @astrify/react-s3-upload to be installed for the FileUploadProvider context."
+		},
+		{
+			"name": "file-upload-complete",
+			"type": "registry:block",
+			"title": "Complete File Upload System",
+			"description": "A complete file upload system with dropzone, error handling, and file list. Requires @astrify/react-s3-upload for context and utilities.",
+			"dependencies": [
+				"react-dropzone",
+				"lucide-react",
+				"clsx",
+				"tailwind-merge",
+				"sonner"
+			],
+			"registryDependencies": ["button"],
+			"files": [
+				{
+					"path": "src/components/FileDropzone.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/components/FileHeader.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/components/FileList.tsx",
+					"type": "registry:component"
+				}
+			],
+			"tailwind": {
+				"config": {}
+			},
+			"cssVars": {},
+			"categories": ["upload", "complete-system"],
+			"docs": "This complete system requires @astrify/react-s3-upload and sonner to be installed:\n\n```bash\nnpm install @astrify/react-s3-upload sonner\n```\n\nThen wrap your app with the FileUploadProvider and add the Toaster:\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Toaster } from 'sonner';\n\nfunction App() {\n  return (\n    <>\n      <FileUploadProvider config={{\n        signedStorageUrl: '/api/signed-storage-url',\n        maxFiles: 10,\n        maxSize: 50 * 1024 * 1024\n      }}>\n        {/* Your components */}\n      </FileUploadProvider>\n      <Toaster position=\"bottom-right\" richColors />\n    </>\n  );\n}\n```"
+		}
+	]
+}

@@ -1,191 +1,616 @@
-# 📦 Typescript • React • Package Starter
+# @astrify/react-s3-upload
 
-A slightly opinionated starter kit for developing TypeScript and/or React NPM packages. It comes with a several pre-configured tools, so you could focus on coding instead of configuring a project for the nth time. From building to releasing a package, this starter kit has you covered.
+A flexible, composable React file upload system built for S3-compatible storage. Features include drag-and-drop, progress tracking, detailed error handling, duplicate detection, and shadcn/ui component integration.
 
-> 👋 Hello there! Follow me [@linesofcode](https://twitter.com/linesofcode) or visit [linesofcode.dev](https://linesofcode.dev) for more cool projects like this one.
+## Features
 
-## 🏃 Getting started
+- 🎯 **S3-Compatible Storage** - Works with AWS S3, DigitalOcean Spaces, Cloudflare R2, MinIO, and more
+- 📦 **Batch Upload Processing** - Request signed URLs for multiple files in a single API call
+- 🔒 **Duplicate Detection** - SHA-256 hashing for deduplication
+- 📊 **Progress Tracking** - Real-time upload progress for each file
+- 🎨 **Composable Components** - Mix and match UI components to build custom upload interfaces
+- 🚀 **Concurrent Uploads** - Automatic queue management with configurable concurrency
+- ♻️ **Error Recovery** - Built-in retry mechanism for failed uploads
+- 🎯 **Type-Safe** - Full TypeScript support with comprehensive type definitions
+- 🧩 **shadcn/ui Components** - Pre-built components available via shadcn CLI
 
-```console
-npx degit TimMikeladze/typescript-react-package-starter my-package
+## Installation
 
-cd my-package && git init
-
-pnpm install && pnpm dev
+```bash
+npm install @astrify/react-s3-upload
+# or
+pnpm add @astrify/react-s3-upload
+# or
+yarn add @astrify/react-s3-upload
 ```
 
-❗Important note: This project uses [pnpm](https://pnpm.io/) for managing dependencies. If you want to use another package manager, remove the `pnpm-lock.yaml` and control-f for usages of `pnpm` in the project and replace them with your package manager of choice. If you don't have `pnpm` installed and want to use it, you can install it by running `npm install -g pnpm`.
+### Peer Dependencies
 
-## What's included?
+This package requires React 17 or higher:
 
-- ⚡️ [tsup](https://github.com/egoist/tsup) - The simplest and fastest way to bundle your TypeScript libraries. Used to bundle package as ESM and CJS modules. Supports TypeScript, Code Splitting, PostCSS, and more out of the box.
-- 📖 [Storybook](https://storybook.js.org/) - Build UI components and pages in isolation. It streamlines UI development, testing, and documentation.
-- 🧪 [Vitest](https://vitest.dev/) - A testing framework for JavaScript. Preconfigured to work with TypeScript and JSX.
-- ✅ [Biome](https://biomejs.dev/) - Format, lint, and more in a fraction of a second.
-- 🪝 [Lefthook](https://github.com/evilmartians/lefthook) — Run pre-commit hooks, lints staged files, executes tests, and more.
-- 🔼 [Release-it](https://github.com/release-it/release-it/) - release-it is a command line tool to automatically generate a new GitHub Release and populates it with the changes (commits) made since the last release.
-- 🐙 [Test & Publish via Github Actions](https://docs.github.com/en/actions) - CI/CD workflows for your package. Run tests on every commit plus integrate with Github Releases to automate publishing package to NPM and Storybook to Github Pages.
-- 🤖 [Dependabot](https://docs.github.com/en/code-security/dependabot) - Github powered dependency update tool that fits into your workflows. Configured to periodically check your dependencies for updates and send automated pull requests.
-- 🏃‍♀️‍➡️ [TSX](https://github.com/privatenumber/tsx) - Execute TypeScript files with zero-config in a Node.js environment.
+```json
+{
+  "peerDependencies": {
+    "react": ">=17",
+    "react-dom": ">=17"
+  }
+}
+```
 
-## Usage
+## Quick Start
 
-### 💻 Developing
+### 1. Install UI components from shadcn registry
 
-Watch and rebuild code with `tsup` and runs Storybook to preview your UI during development.
+```bash
+# Install individual components
+npx shadcn@latest add https://your-registry-url/r/file-dropzone.json
+npx shadcn@latest add https://your-registry-url/r/file-list.json
+npx shadcn@latest add https://your-registry-url/r/file-errors.json
 
-```console
+# Or install the complete system
+npx shadcn@latest add https://your-registry-url/r/file-upload-complete.json
+```
+
+### 2. Compose your upload interface with FileUploadProvider
+
+```tsx
+import { FileUploadProvider } from '@astrify/react-s3-upload';
+import { FileDropzone } from '@/components/ui/file-dropzone';
+import { FileList } from '@/components/ui/file-list';
+import { FileErrors } from '@/components/ui/file-errors';
+
+function UploadSection() {
+  return (
+    <FileUploadProvider 
+      config={{
+        presignEndpoint: '/api/signed-storage-url',
+        maxFiles: 10,
+        maxSize: 50 * 1024 * 1024, // 50MB
+        accept: 'image/*,application/pdf'
+      }}
+    >
+      <div className="space-y-4">
+        <FileDropzone />
+        <FileList />
+        <FileErrors />
+      </div>
+    </FileUploadProvider>
+  );
+}
+```
+
+### 3. Use in a form (example)
+
+```tsx
+import { useState } from 'react';
+import { FileUploadProvider, useFileUpload } from '@astrify/react-s3-upload';
+import { FileDropzone } from '@/components/ui/file-dropzone';
+import { FileList } from '@/components/ui/file-list';
+import { FileErrors } from '@/components/ui/file-errors';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+
+// Main form component with the provider
+function UploadForm() {
+  return (
+    <FileUploadProvider 
+      config={{
+        presignEndpoint: '/api/signed-storage-url',
+        maxFiles: 5,
+        maxSize: 10 * 1024 * 1024, // 10MB
+        accept: 'image/*,application/pdf'
+      }}
+    >
+      <FormContent />
+    </FileUploadProvider>
+  );
+}
+
+function FormContent() {
+  const { files, hasComplete, hasPending, hasUploading, hasErrors } = useFileUpload();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Extract only completed files for submission
+    const completedFiles = files.filter(f => f.status === 'complete');
+    
+    // Get form data
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    // Submit with completed file data
+    const submission = {
+      name: formData.get('name'),
+      files: completedFiles.map(f => ({
+        id: f.id,
+        name: f.name,
+        url: f.url,
+        sha256: f.sha256
+      }))
+    };
+    
+    console.log('Form submitted:', submission);
+    // Send to your API here
+  };
+
+  // Enable submit only when all uploads are complete
+  const canSubmit = hasComplete && !hasPending && !hasUploading && !hasErrors;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="name">Name</Label>
+        <Input
+          type="text"
+          id="name"
+          name="name"
+          placeholder="Enter your name"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Attachments</Label>
+        <div className="space-y-4">
+          <FileErrors />
+          <FileDropzone />
+          <FileList />
+        </div>
+      </div>
+
+      <Button 
+        type="submit"
+        disabled={!canSubmit}
+        className="w-full sm:w-auto"
+      >
+        Submit with {files.filter(f => f.status === 'complete').length} files
+      </Button>
+    </form>
+  );
+}
+```
+
+## Usage Examples
+
+### Basic File Upload
+
+```tsx
+import { FileUploadProvider } from '@astrify/react-s3-upload';
+import { FileDropzone } from '@/components/ui/file-dropzone';
+import { FileList } from '@/components/ui/file-list';
+
+function BasicUpload() {
+  return (
+    <FileUploadProvider config={{
+      presignEndpoint: '/api/signed-storage-url',
+      maxFiles: 5
+    }}>
+      <FileDropzone />
+      <FileList />
+    </FileUploadProvider>
+  );
+}
+```
+
+### Image Upload with List View
+
+```tsx
+import { FileUploadProvider } from '@astrify/react-s3-upload';
+import { FileDropzone } from '@/components/ui/file-dropzone';
+import { FileList } from '@/components/ui/file-list';
+
+function ImageUpload() {
+  return (
+    <FileUploadProvider config={{
+      presignEndpoint: '/api/signed-storage-url',
+      maxFiles: 12,
+      accept: 'image/*'
+    }}>
+      <FileDropzone />
+      <FileList showImagePreviews />
+    </FileUploadProvider>
+  );
+}
+```
+
+### With Custom Headers
+
+```tsx
+import { FileUploadProvider } from '@astrify/react-s3-upload';
+
+function SecureUpload() {
+  return (
+    <FileUploadProvider config={{
+      presignEndpoint: '/api/signed-storage-url',
+      // Static headers
+      presignHeaders: {
+        'X-API-Key': 'your-api-key'
+      },
+      // Or dynamic headers (async function)
+      presignHeaders: async () => {
+        const token = await getAuthToken();
+        return {
+          'Authorization': `Bearer ${token}`,
+          'X-Request-ID': generateRequestId()
+        };
+      }
+    }}>
+      <FileDropzone />
+      <FileList />
+    </FileUploadProvider>
+  );
+}
+```
+
+### Using the Hook API
+
+```tsx
+import { useFileUpload } from '@astrify/react-s3-upload';
+
+function CustomUploadButton() {
+  const { addFiles, files, isUploading } = useFileUpload();
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  const handleClick = () => {
+    inputRef.current?.click();
+  };
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    addFiles(files);
+  };
+  
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        onChange={handleChange}
+        className="hidden"
+      />
+      <button onClick={handleClick} disabled={isUploading}>
+        Upload Files ({files.length})
+      </button>
+    </>
+  );
+}
+```
+
+## API Reference
+
+### FileUploadProvider
+
+The main context provider that manages upload state and logic.
+
+```tsx
+interface FileUploadConfig {
+  maxFiles?: number;              // Maximum number of files (default: 10)
+  maxSize?: number;               // Maximum file size in bytes (default: 50MB)
+  accept?: string;                // Accepted file types (default: '*')
+  multiple?: boolean;             // Allow multiple file selection (default: true)
+  presignEndpoint?: string;       // Endpoint for signed URL generation (default: '/signed-storage-url')
+  presignHeaders?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>); // Optional headers for presign requests
+  onUploadComplete?: (files: FileUpload[]) => void;
+  onUploadError?: (errors: Array<{ file: File; error: any }>) => void;
+  onFilesChange?: (files: File[]) => void;
+}
+```
+
+### useFileUpload Hook
+
+Access the upload context and all functionality.
+
+```tsx
+const {
+  // State
+  files,           // Current file collection
+  errors,          // Error messages
+  isUploading,     // Upload in progress
+  remainingSlots,  // Available upload slots
+  
+  // Actions
+  addFiles,        // Add files to upload
+  removeFile,      // Remove a specific file
+  removeAll,       // Clear all files
+  retryUpload,     // Retry failed upload
+  reset,           // Reset to initial state
+  
+  // Utilities
+  canAcceptMore,   // Can accept more files
+  acceptedFileTypes,
+  maxFileSize
+} = useFileUpload();
+```
+
+### Types
+
+```tsx
+interface FileUpload {
+  id: string;              // SHA-256 hash
+  name: string;            // File name
+  size: number;            // File size in bytes
+  type: string;            // MIME type
+  sha256: string;          // SHA-256 hash
+  url: string;             // Presigned upload URL
+  status: UploadStatus;    // Upload status
+  progress: number;        // Upload progress (0-100)
+  error?: string;          // Error message if failed
+  preview?: string;        // Preview URL for images
+}
+
+type UploadStatus = 'pending' | 'uploading' | 'complete' | 'error';
+```
+
+## Server Integration
+
+### Laravel Example
+
+The package expects a server endpoint that returns presigned URLs for S3 uploads:
+
+```php
+// routes/api.php
+Route::post('/signed-storage-url', function (Request $request) {
+    $validated = $request->validate([
+        'files' => 'required|array',
+        'files.*.filename' => 'required|string',
+        'files.*.content_type' => 'required|string',
+        'files.*.filesize' => 'required|integer',
+        'files.*.sha256' => 'required|string',
+    ]);
+    
+    $responses = [];
+    
+    foreach ($validated['files'] as $file) {
+        // Check for duplicates
+        if (File::where('sha256', $file['sha256'])->exists()) {
+            return response()->json([
+                'error' => 'Duplicate file detected'
+            ], 422);
+        }
+        
+        // Generate presigned URL
+        $key = 'uploads/' . Str::uuid() . '.' . $file['extension'];
+        $url = Storage::disk('s3')->temporaryUploadUrl(
+            $key,
+            now()->addMinutes(30),
+            ['ContentType' => $file['content_type']]
+        );
+        
+        $responses[] = [
+            'sha256' => $file['sha256'],
+            'bucket' => config('filesystems.disks.s3.bucket'),
+            'key' => $key,
+            'url' => $url,
+            'filename' => $file['filename']
+        ];
+    }
+    
+    return response()->json(['files' => $responses]);
+});
+```
+
+### Node.js/Express Example
+
+```javascript
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+app.post('/api/signed-storage-url', async (req, res) => {
+  const { files } = req.body;
+  
+  const responses = await Promise.all(files.map(async (file) => {
+    const key = `uploads/${uuid()}.${file.extension}`;
+    
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+      ContentType: file.content_type,
+    });
+    
+    const url = await getSignedUrl(s3Client, command, {
+      expiresIn: 1800, // 30 minutes
+    });
+    
+    return {
+      sha256: file.sha256,
+      bucket: process.env.S3_BUCKET,
+      key,
+      url,
+      filename: file.filename
+    };
+  }));
+  
+  res.json({ files: responses });
+});
+```
+
+## shadcn Registry Components
+
+The following components are available through the shadcn registry:
+
+### file-dropzone
+Drag-and-drop file selector with visual feedback.
+
+### file-list
+List view displaying files with progress bars, status, and actions.
+
+### file-errors
+Error message display via toast notifications.
+
+### file-header
+Header component showing file count and bulk actions.
+
+### file-upload-complete
+Complete file upload system bundling all components together.
+
+## Features in Detail
+
+### Duplicate Detection
+Files are hashed using SHA-256 on the client side before upload. The hash is sent to the server for deduplication checking, preventing duplicate uploads and saving bandwidth.
+
+### Concurrent Upload Management
+The system automatically manages upload concurrency, limiting to 3 simultaneous uploads by default to prevent overwhelming the server while maintaining good performance.
+
+### Progress Tracking
+Each file's upload progress is tracked individually using XMLHttpRequest, providing real-time feedback to users.
+
+### Error Recovery
+Failed uploads can be retried with a single click. The system will request a fresh signed URL and attempt the upload again.
+
+### Memory Management
+- Blob URLs are automatically cleaned up when files are removed
+- Abort controllers cancel in-flight uploads when needed
+- Preview URLs are revoked to prevent memory leaks
+
+## Browser Support
+
+This package supports all modern browsers that implement:
+- File API
+- Crypto.subtle (for SHA-256 hashing)
+- XMLHttpRequest Level 2 (for progress events)
+- ES2015+ JavaScript features
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](#contributing-guide) below for details on development setup and guidelines.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/astrify/react-s3-upload.git
+cd react-s3-upload
+
+# Install dependencies
+pnpm install
+
+# Start development mode
 pnpm dev
 ```
 
-Run all tests and watch for changes
+### Available Scripts
 
-```console
+#### Development
+- `pnpm dev` - Run concurrent development mode (builds, Storybook, and tests)
+- `pnpm build` - Build package with tsup for production
+- `pnpm build --watch` - Build package in watch mode
+
+#### Testing
+- `pnpm test` - Run all tests in watch mode with Vitest
+- `pnpm test:ci` - Run tests once with coverage reporting
+- `pnpm vitest run` - Run tests once without watch
+
+#### Storybook
+- `pnpm storybook` - Start Storybook dev server on port 6006
+- `pnpm storybook:build` - Build static Storybook
+
+#### Code Quality
+- `pnpm lint` - Format and fix code with Biome
+- `pnpm lint:ci` - Check code without fixing (for CI)
+- `pnpm commit` - Create formatted commit with commitizen
+
+#### Publishing
+- `pnpm release` - Build and create a release with release-it
+- `pnpm link:self` - Link package globally for local development
+
+#### Registry
+- `pnpm registry:build` - Build the shadcn registry JSON files
+
+### Project Structure
+
+```
+src/
+├── FileUploadContext.tsx    # Context provider with upload logic
+├── components/              # UI components
+│   ├── FileDropzone.tsx    # Drag-and-drop file selector
+│   ├── FileList.tsx        # List view with progress tracking
+│   ├── FileErrors.tsx      # Error display component
+│   └── FileHeader.tsx      # Header with file count and actions
+├── lib/
+│   └── upload.ts           # Upload utilities and S3 integration
+├── types/
+│   └── file-upload.ts      # TypeScript type definitions
+└── index.ts                # Package exports
+```
+
+### Development Tools
+
+- **tsup** - TypeScript bundler for ESM and CJS outputs
+- **Vite** - Powers Storybook development
+- **Vitest** - Testing framework
+- **Biome** - Code formatting and linting
+- **Lefthook** - Git hooks for code quality
+- **Commitizen** - Standardized commit messages
+
+### Testing
+
+Run tests with:
+
+```bash
 pnpm test
 ```
 
-### 🏗️ Building
+Tests are located in the `tests/` directory and use Vitest with React Testing Library.
 
-Build package with `tsup` for production.
+### Building
 
-```console
+Build the package with:
+
+```bash
 pnpm build
 ```
 
-### ▶️ Running files written in TypeScript
-
-To execute a file written in TypeScript inside a Node.js environment, use the `tsx` command. This will detect your `tsconfig.json` and run the file with the correct configuration. This is perfect for running custom scripts while remaining type-safe.
-
-```console
-pnpm tsx ./path/to/file.ts
-```
-
-This is useful for running scripts, starting a server, or any other code you want to run while remaining type-safe.
+This creates ESM and CJS bundles in the `dist/` directory.
 
 ### 🖇️ Linking
 
-Often times you want to `link` this package to another project when developing locally, circumventing the need to publish to NPM to consume it.
+Often times you want to link this package to another project when developing locally, circumventing the need to publish to NPM to consume it. In a project where you want to consume your package run:
 
-In a project where you want to consume your package run:
-
-```console
-pnpm link my-package --global
+```bash
+pnpm link @astrify/react-s3-upload --global
 ```
 
 Learn more about package linking [here](https://pnpm.io/cli/link).
 
-### 📩 Committing
+### Releasing
 
-When you are ready to commit simply run the following command to get a well formatted commit message. All staged files will automatically be linted and fixed as well.
+To create a new release:
 
-```console
-pnpm commit
-```
-
-### ✅ Linting
-
-To lint and reformat your code at any time, simply run the following command. Under the hood, this uses [Biome](https://biomejs.dev/). If you use VSCode, I suggest installing the official [biome extension](https://marketplace.visualstudio.com/items?itemName=biomejs.biome).
-
-```console
-pnpm lint
-```
-
-### 🔖 Releasing, tagging & publishing to NPM
-
-Create a semantic version tag and publish to Github Releases. When a new release is detected a Github Action will automatically build the package and publish it to NPM. Additionally, a Storybook will be published to Github pages.
-
-Learn more about how to use the `release-it` command [here](https://github.com/release-it/release-it).
-
-```console
+```bash
 pnpm release
 ```
 
-When you are ready to publish to NPM simply run the following command:
+This will:
+1. Build the package
+2. Create a git tag
+3. Generate a GitHub release
+4. Publish to npm (if configured)
 
-```console
-pnpm publish
-```
+### Contributing Guide
 
-#### 🤖 Auto publish after Github Release (or manually by dispatching the Publish workflow)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`pnpm test`)
+5. Run linting (`pnpm lint`)
+6. Commit your changes (`pnpm commit`)
+7. Push to your branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
 
-❗Important note: in order to automatically publish a Storybook on Github Pages you need to open your repository settings, navigate to "Actions" and enable **"Read & write permissions"** for Workflows. Then navigate to "Pages" and choose **"GitHub Actions"** as the source for the Build and Deployment. After a successful deployment you can find your Storybook at `https://<your-github-username>.github.io/<your-repository-name>/`.
+## License
 
-❗Important note: in order to publish package to NPM you must add your token as a Github Action secret. Learn more on how to configure your repository and publish packages through Github Actions [here](https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages).
+[MIT](LICENSE) © [Your Name]
 
-## 🎨 CSS & PostCSS
+## Support
 
-To bundle CSS files with your package that you intend on users to import within their own project, a few extra steps are required.
+- [GitHub Issues](https://github.com/astrify/react-s3-upload/issues)
 
-1. Add your CSS files to the `src` directory. For example, `src/styles.css`.
-2. Modify `tsup.config.ts` file to include your CSS file as an entry point. For example:
+## Acknowledgments
 
-```ts
-import { defineConfig } from "tsup";
-
-export default defineConfig({
-	entry: ["src/index.ts", "src/styles.css"],
-	// ...
-});
-```
-
-3. Modify `package.json` to include the CSS file as an `exports` entry. For example:
-
-```json
-{
-	"exports": {
-		"./styles.css": "./dist/styles.css"
-	}
-}
-```
-
-4. Now consumers of your package can import your CSS file anywhere in their project. For example:
-
-```ts
-import "your-package/styles.css";
-```
-
-Alternatively, if your package has a hard dependency on a CSS file and you want it to always be loaded when your package is imported, you can import it anywhere within your package's code and it will be bundled with-in your package.
-
-[tsup](https://github.com/egoist/tsup) supports PostCSS out of the box. Simply run `pnpm add postcss -D` add a `postcss.config.js` file to the root of your project, then add any plugins you need. Learn more how to configure PostCSS [here](https://tsup.egoist.dev/#css-support).
-
-Additionally consider using the [tsup](https://github.com/egoist/tsup) configuration option `injectStyle` to inject the CSS directly into your Javascript bundle instead of outputting a separate CSS file.
-
-## 🚀 Built something using this starter-kit?
-
-That's awesome! Feel free to add it to the list.
-
-🗃️ **[Next Upload](https://github.com/TimMikeladze/next-upload)** - Turn-key solution for integrating Next.js with signed & secure file-uploads to an S3 compliant storage service such as R2, AWS, or Minio.
-
-🏁 **[Next Flag](https://github.com/TimMikeladze/next-flag)** - Feature flags powered by GitHub issues and NextJS. Toggle the features of your app by ticking a checkbox in a GitHub issue. Supports server-side rendering, multiple environments, and can be deployed as a stand-alone feature flag server.
-
-🔒 **[Next Protect](https://github.com/TimMikeladze/next-protect)** - Password protect a Next.js site. Supports App Router, Middleware and Edge Runtime.
-
-📮 **[Next Invite](https://github.com/TimMikeladze/next-invite)** - A drop-in invite system for your Next.js app. Generate and share invite links for users to join your app.
-
-🔐 **[Next Auth MUI](https://github.com/TimMikeladze/next-auth-mui)** - Sign-in dialog component for NextAuth built with Material UI and React. Detects configured OAuth and Email providers and renders buttons or input fields for each respectively. Fully themeable, extensible and customizable to support custom credential flows.
-
-⌚️ **[Next Realtime](https://github.com/TimMikeladze/next-realtime)** - Experimental drop-in solution for real-time data leveraging the Next.js Data Cache.
-
-✅ **[Mui Joy Confirm](https://github.com/TimMikeladze/mui-joy-confirm)** - Confirmation dialogs built on top of [@mui/joy](https://mui.com/joy-ui/getting-started/) and react hooks.
-
-🗂️ **[Use FS](https://github.com/TimMikeladze/use-fs)** - A React hook for integrating with the File System Access API.
-
-🐙 **[Use Octokit](https://github.com/TimMikeladze/use-octokit)** - A data-fetching hook built on top of the Octokit and SWR for interacting with the Github API. Use this inside a React component for a type-safe, data-fetching experience with caching, polling, and more.
-
-🐌 **[Space Slug](https://github.com/TimMikeladze/space-slug)** - Generate unique slugs, usernames, numbers, custom words, and more using an intuitive api with zero dependencies.
-
-🌡️ **[TSC Baseline](https://github.com/TimMikeladze/tsc-baseline/)** - Save a baseline of TypeScript errors and compare new errors against it. Useful for type-safe feature development in TypeScript projects that have a lot of errors. This tool will filter out errors that are already in the baseline and only show new errors.
-
-✅ **[react-ai-translator](https://github.com/CodeThicket/react-ai-translator)** - A React hook for local, secure, on-demand translations powered by the Xenova/nllb-200-distilled-600M model. This package utilizes the WebGPU capabilities of the device on which the app runs, ensuring data privacy and enabling you to translate text without sending data to third-party APIs.
-
-♾️ **[react-infinite-observer](https://github.com/Tasin5541/react-infinite-observer)** - A simple hook to implement infinite scroll in react component, with full control over the behavior. Implemented with IntersectionObserver.
-
-</> **[react-simple-devicons](https://github.com/shawilly/react-simple-devicons)** - A straightforward React implementation that provides access to SVG dev icons from (devicon.dev)[https://devicon.dev], allowing customization of color, size, and styling.
-
-🎋 **[GitHub Issue to Branch](https://github.com/TimMikeladze/github-issue-to-branch)** - CLI tool to quickly create well-named branches from GitHub issues.
-
-📏 **[React DevBar](https://github.com/TimMikeladze/react-devbar/)** - A customizable floating toolbar for React applications. Build and integrate your own dev tools with a draggable interface inspired by the Vercel toolbar. Perfect for adding debugging panels, theme controls, and other development utilities for your app.
-
-⏲️ **[Fake Time Series](https://github.com/TimMikeladze/fake-time-series/)** - A flexible CLI tool and library for generating fake time series data. Perfect for testing, development, and demonstration purposes.
-
-📡 **[Install Command](https://github.com/TimMikeladze/react-install-command/)** - A React component for rendering a 'npm install <package name>' command block. Supports multiple package managers.
+Built with:
+- [React](https://react.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- [shadcn/ui](https://ui.shadcn.com)
+- [Tailwind CSS](https://tailwindcss.com)

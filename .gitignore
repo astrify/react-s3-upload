@@ -7,6 +7,7 @@
 
 # JetBrains IDE files
 .idea/
+.claude/
 
 # testing
 /coverage
@@ -32,3 +33,6 @@ yarn-error.log*
 .env.production.local
 
 storybook-static
+CLAUDE.md
+ARCHITECTURE.md
+/docs

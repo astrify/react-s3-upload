@@ -6,6 +6,11 @@
 		"moduleResolution": "Bundler",
 		"skipLibCheck": true,
 		"strict": true,
-		"noEmit": true
+		"noEmit": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"],
+			"@astrify/react-s3-upload": ["./src/index.ts"]
+		}
 	}
 }

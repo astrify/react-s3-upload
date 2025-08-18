@@ -1,0 +1,22 @@
+{
+	"$schema": "https://ui.shadcn.com/schema/registry-item.json",
+	"name": "file-errors",
+	"type": "registry:component",
+	"title": "File Errors",
+	"description": "Error handler component that displays errors as toast notifications using sonner.",
+	"dependencies": ["sonner"],
+	"registryDependencies": [],
+	"files": [
+		{
+			"path": "src/components/FileErrors.tsx",
+			"content": "import { useFileErrors, useFileUpload } from \"@astrify/react-s3-upload\";\nimport { useEffect } from \"react\";\nimport { Toaster, toast } from \"sonner\";\n\nexport function FileErrors() {\n\tconst errors = useFileErrors();\n\tconst { clearErrors } = useFileUpload();\n\n\t// Show errors as toasts\n\tuseEffect(() => {\n\t\tif (errors.length > 0) {\n\t\t\t// Show toasts for all errors\n\t\t\terrors.forEach((error) => {\n\t\t\t\ttoast.error(error.message, {\n\t\t\t\t\tdescription:\n\t\t\t\t\t\ttypeof error.details === \"string\" ? error.details : undefined,\n\t\t\t\t\trichColors: true,\n\t\t\t\t});\n\t\t\t});\n\n\t\t\t// Clear errors immediately after showing toasts\n\t\t\tclearErrors();\n\t\t}\n\t}, [errors, clearErrors]);\n\n\t// Replace with null if you're loading the Toaster in a different component\n\treturn <Toaster expand={true} />;\n}\n",
+			"type": "registry:component"
+		}
+	],
+	"tailwind": {
+		"config": {}
+	},
+	"cssVars": {},
+	"docs": "This component displays errors as toast notifications using sonner.\\n\\nUsage:\\n```tsx\\n// Basic usage\\n<FileErrors />\\n\\n// With custom position and duration\\n<FileErrors position=\\\"top-center\\\" duration={3000} />\\n```\\n\\n**Important**: You must have a `<Toaster />` component from sonner in your app for toasts to appear:\\n```tsx\\nimport { Toaster } from 'sonner';\\n\\n// In your app root\\n<Toaster position=\\\"bottom-right\\\" richColors />\\n```",
+	"categories": ["upload", "feedback"]
+}

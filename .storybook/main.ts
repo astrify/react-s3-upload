@@ -5,7 +5,19 @@ const config: StorybookConfig = {
 	stories: ["../stories/**/*.stories.@(js|jsx|ts|tsx|mdx)"],
 	addons: [
 		"@storybook/addon-links",
-		"@storybook/addon-essentials",
+		{
+			name: "@storybook/addon-essentials",
+			options: {
+				actions: false,      // Disable actions logging
+				backgrounds: false,  // Disable background color selector
+				controls: false,     // Disable controls panel
+				docs: false,        // Disable docs
+				viewport: false,    // Disable viewport selector
+				toolbars: false,    // Disable toolbars
+				measure: false,     // Disable measure tool
+				outline: false,     // Disable outline tool
+			}
+		},
 		"@storybook/addon-interactions",
 	],
 	framework: {

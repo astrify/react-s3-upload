@@ -47,14 +47,67 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Deploy Storybook
-        uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Storybook and Registry
+        run: |
+          # Build Storybook with base path for GitHub Pages
+          GITHUB_PAGES=true pnpm storybook:build
+          
+          # Build registry components
+          pnpm registry:build
+          
+          # Copy registry files to Storybook output
+          cp -r public/r storybook-static/r
+          
+          # Add .nojekyll to serve files starting with underscore
+          touch storybook-static/.nojekyll
+          
+          # Create a simple registry index page
+          cat > storybook-static/r/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="utf-8">
+              <title>React S3 Upload - shadcn Registry</title>
+              <style>
+                  body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
+                  h1 { color: #333; }
+                  .component-list { list-style: none; padding: 0; }
+                  .component-list li { margin: 0.5rem 0; }
+                  .component-list a { color: #0066cc; text-decoration: none; }
+                  .component-list a:hover { text-decoration: underline; }
+                  .back-link { margin-bottom: 2rem; }
+              </style>
+          </head>
+          <body>
+              <div class="back-link">
+                  <a href="../">← Back to Storybook</a>
+              </div>
+              <h1>React S3 Upload - shadcn Registry</h1>
+              <p>Registry components for the React S3 Upload library.</p>
+              <h2>Available Components:</h2>
+              <ul class="component-list">
+                  <li><a href="file-upload.json">file-upload.json</a> - Complete file upload system</li>
+              </ul>
+              <h2>Installation:</h2>
+              <pre><code>npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-upload.json</code></pre>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          install_command: pnpm install --frozen-lockfile
-          build_command: pnpm storybook:build
-          path: storybook-static
-        env:
-          GH_TOKEN: ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}
+          path: ./storybook-static
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       # - name: Build and publish to npm
       #   if: github.ref == 'refs/tags/v*' # Only run on version tags

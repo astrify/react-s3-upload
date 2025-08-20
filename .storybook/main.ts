@@ -38,6 +38,11 @@ const config: StorybookConfig = {
 			"@astrify/react-s3-upload": resolve(__dirname, "../src"),
 		};
 
+		// Set base path for GitHub Pages deployment
+		if (process.env.GITHUB_PAGES) {
+			config.base = '/react-s3-upload/';
+		}
+
 		return config;
 	},
 };

@@ -43,10 +43,10 @@ This package requires React 17 or higher:
 
 ```bash
 # Install individual components
-npx shadcn@latest add https://raw.githubusercontent.com/astrify/react-s3-upload/refs/heads/main/public/r/file-dropzone.json
-npx shadcn@latest add https://raw.githubusercontent.com/astrify/react-s3-upload/refs/heads/main/public/r/file-list.json
-npx shadcn@latest add https://raw.githubusercontent.com/astrify/react-s3-upload/refs/heads/main/public/r/file-errors.json
-npx shadcn@latest add https://raw.githubusercontent.com/astrify/react-s3-upload/refs/heads/main/public/r/file-header.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-dropzone.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-list.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-errors.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-header.json
 
 # Or install the complete system
 npx shadcn@latest add https://raw.githubusercontent.com/astrify/react-s3-upload/refs/heads/main/public/r/file-upload-complete.json

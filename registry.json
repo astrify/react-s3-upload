@@ -4,9 +4,9 @@
 	"homepage": "https://github.com/astrify/react-s3-upload",
 	"items": [
 		{
-			"name": "file-dropzone",
+			"name": "dropzone",
 			"type": "registry:component",
-			"title": "File Dropzone",
+			"title": "Dropzone",
 			"description": "A flexible file dropzone component with drag-and-drop support, file validation, and context integration.",
 			"dependencies": [
 				"react-dropzone",
@@ -18,7 +18,7 @@
 			"registryDependencies": [],
 			"files": [
 				{
-					"path": "src/components/FileDropzone.tsx",
+					"path": "src/components/upload/dropzone.tsx",
 					"type": "registry:component"
 				}
 			],
@@ -27,18 +27,18 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "form"],
-			"docs": "This component requires @astrify/react-s3-upload to be installed for the FileUploadProvider context."
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Dropzone } from '@/components/upload/dropzone';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      presignEndpoint: '/api/signed-storage-url',\n      maxFiles: 5,\n      maxSize: 10 * 1024 * 1024, // 10MB\n      accept: 'image/*,application/pdf'\n    }}>\n      <Dropzone />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
-			"name": "file-errors",
+			"name": "errors",
 			"type": "registry:component",
-			"title": "File Errors",
+			"title": "Errors",
 			"description": "Error handler component that displays errors as toast notifications using sonner.",
 			"dependencies": ["sonner"],
 			"registryDependencies": [],
 			"files": [
 				{
-					"path": "src/components/FileErrors.tsx",
+					"path": "src/components/upload/errors.tsx",
 					"type": "registry:component"
 				}
 			],
@@ -47,18 +47,18 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "feedback"],
-			"docs": "This component displays errors as toast notifications using sonner.\\n\\nUsage:\\n```tsx\\n// Basic usage\\n<FileErrors />\\n\\n// With custom position and duration\\n<FileErrors position=\\\"top-center\\\" duration={3000} />\\n```\\n\\n**Important**: You must have a `<Toaster />` component from sonner in your app for toasts to appear:\\n```tsx\\nimport { Toaster } from 'sonner';\\n\\n// In your app root\\n<Toaster position=\\\"bottom-right\\\" richColors />\\n```"
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Errors } from '@/components/upload/errors';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{ presignEndpoint: '/api/signed-storage-url' }}>\n      <Errors />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
-			"name": "file-header",
+			"name": "header",
 			"type": "registry:component",
-			"title": "File Header",
+			"title": "Header",
 			"description": "A header component for file upload UI with file count and actions.",
 			"dependencies": ["lucide-react", "clsx", "tailwind-merge"],
 			"registryDependencies": ["button"],
 			"files": [
 				{
-					"path": "src/components/FileHeader.tsx",
+					"path": "src/components/upload/header.tsx",
 					"type": "registry:component"
 				}
 			],
@@ -67,18 +67,18 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "navigation"],
-			"docs": "This component requires @astrify/react-s3-upload to be installed for the FileUploadProvider context."
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Header } from '@/components/upload/header';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      presignEndpoint: '/api/signed-storage-url',\n      maxFiles: 10\n    }}>\n      <Header title=\"Upload Documents\" />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
-			"name": "file-list",
+			"name": "list",
 			"type": "registry:component",
-			"title": "File List",
+			"title": "List",
 			"description": "A list-based file display component showing upload status, progress, and error handling.",
 			"dependencies": ["lucide-react", "clsx", "tailwind-merge"],
 			"registryDependencies": ["button"],
 			"files": [
 				{
-					"path": "src/components/FileList.tsx",
+					"path": "src/components/upload/list.tsx",
 					"type": "registry:component"
 				}
 			],
@@ -87,13 +87,13 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "display"],
-			"docs": "This component requires @astrify/react-s3-upload to be installed for the FileUploadProvider context."
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { List } from '@/components/upload/list';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      presignEndpoint: '/api/signed-storage-url',\n      maxFiles: 12,\n      accept: 'image/*'\n    }}>\n      <List showImagePreviews />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
-			"name": "file-upload-complete",
+			"name": "upload",
 			"type": "registry:block",
-			"title": "Complete File Upload System",
-			"description": "A complete file upload system with dropzone, error handling, and file list. Requires @astrify/react-s3-upload for context and utilities.",
+			"title": "Upload",
+			"description": "A complete file upload component with dropzone, progress tracking, and error handling. Includes all upload components in one ready-to-use block.",
 			"dependencies": [
 				"react-dropzone",
 				"lucide-react",
@@ -104,15 +104,19 @@
 			"registryDependencies": ["button"],
 			"files": [
 				{
-					"path": "src/components/FileDropzone.tsx",
+					"path": "src/components/upload/upload.tsx",
 					"type": "registry:component"
 				},
 				{
-					"path": "src/components/FileHeader.tsx",
+					"path": "src/components/upload/dropzone.tsx",
 					"type": "registry:component"
 				},
 				{
-					"path": "src/components/FileList.tsx",
+					"path": "src/components/upload/list.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/components/upload/errors.tsx",
 					"type": "registry:component"
 				}
 			],
@@ -121,7 +125,55 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "complete-system"],
-			"docs": "This complete system requires @astrify/react-s3-upload and sonner to be installed:\n\n```bash\nnpm install @astrify/react-s3-upload sonner\n```\n\nThen wrap your app with the FileUploadProvider and add the Toaster:\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Toaster } from 'sonner';\n\nfunction App() {\n  return (\n    <>\n      <FileUploadProvider config={{\n        signedStorageUrl: '/api/signed-storage-url',\n        maxFiles: 10,\n        maxSize: 50 * 1024 * 1024\n      }}>\n        {/* Your components */}\n      </FileUploadProvider>\n      <Toaster position=\"bottom-right\" richColors />\n    </>\n  );\n}\n```"
+			"docs": "A complete file upload component that includes dropzone, file list, progress tracking, and error handling all in one ready-to-use block.\n\n**Usage:**\n\n```tsx\nimport { Upload } from '@/components/upload/upload';\n\nfunction App() {\n  return (\n    <Upload \n      config={{\n        presignEndpoint: '/api/signed-storage-url',\n        maxFiles: 5,\n        maxSize: 10 * 1024 * 1024, // 10MB\n        accept: 'image/*'\n      }}\n    />\n  );\n}\n```"
+		},
+		{
+			"name": "upload-inertia",
+			"type": "registry:example",
+			"title": "Upload with Inertia.js",
+			"description": "A complete file upload form example integrated with Laravel Inertia.js, showing form handling, validation, and submission.",
+			"dependencies": [
+				"react-dropzone",
+				"lucide-react",
+				"clsx",
+				"tailwind-merge",
+				"sonner",
+				"@inertiajs/react"
+			],
+			"registryDependencies": ["input", "label", "button"],
+			"files": [
+				{
+					"path": "src/components/upload/upload-inertia.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/components/upload/dropzone.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/components/upload/list.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/components/upload/errors.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/components/upload/header.tsx",
+					"type": "registry:component"
+				},
+				{
+					"path": "src/laravel/Commands/InstallCommand.php",
+					"type": "registry:file",
+					"target": "app/Console/Commands/ReactS3UploadInstallCommand.php"
+				}
+			],
+			"tailwind": {
+				"config": {}
+			},
+			"cssVars": {},
+			"categories": ["upload", "example", "inertia"],
+			"docs": "Complete file upload module for Inertia.js with Laravel integration.\n\n--------------------------------------------------------------------------\n Installation:\n--------------------------------------------------------------------------\n\n1. Install the React components and command via shadcn:\n   npx shadcn@latest add [REGISTRY_URL]/r/upload-inertia.json\n\n2. Run the setup command to install dependencies and controllers:\n   php artisan react-s3-upload:install\n\nThe install command will:\n• Install required Composer dependencies (league/flysystem-aws-s3-v3)\n• Copy Laravel controllers from node_modules to your app\n• Add routes to routes/web.php\n• Provide setup instructions\n\nNote: The install command is automatically available after step 1 (Laravel auto-discovers commands in app/Console/Commands)\n\n--------------------------------------------------------------------------\n Usage:\n--------------------------------------------------------------------------\n\nimport { UploadInertia } from '@/components/upload/upload-inertia';\n\n<UploadInertia \n  presignEndpoint=\"/presign\"\n  maxFiles={5}\n  maxSize={10 * 1024 * 1024} // 10MB\n/>\n\n--------------------------------------------------------------------------\n Manual Routes (if needed):\n--------------------------------------------------------------------------\n\nRoute::post('/documents', App\\Http\\Controllers\\DocumentCreateController::class)\n    ->middleware(['auth'])\n    ->name('documents.create');\n\nRoute::post('/presign', App\\Http\\Controllers\\PresignController::class)\n    ->middleware(['auth'])\n    ->name('documents.presign');"
 		}
 	]
 }

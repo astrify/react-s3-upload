@@ -43,22 +43,45 @@ This package requires React 17 or higher:
 
 ```bash
 # Install individual components
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-dropzone.json
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-list.json
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-errors.json
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/file-header.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/dropzone.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/list.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/errors.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/header.json
 
 # Or install the complete system
-npx shadcn@latest add https://raw.githubusercontent.com/astrify/react-s3-upload/refs/heads/main/public/r/file-upload-complete.json
+npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/upload.json
 ```
 
-### 2. Compose your upload interface with FileUploadProvider
+### 2. Use the complete Upload component
+
+```tsx
+import { Upload } from '@/components/upload/upload';
+import { Toaster } from 'sonner';
+
+function App() {
+  return (
+    <>
+      <Upload 
+        config={{
+          presignEndpoint: '/api/signed-storage-url',
+          maxFiles: 10,
+          maxSize: 50 * 1024 * 1024, // 50MB
+          accept: 'image/*,application/pdf'
+        }}
+      />
+      <Toaster position="bottom-right" richColors />
+    </>
+  );
+}
+```
+
+### 3. Or compose your own interface with individual components
 
 ```tsx
 import { FileUploadProvider } from '@astrify/react-s3-upload';
-import { FileDropzone } from '@/components/ui/file-dropzone';
-import { FileList } from '@/components/ui/file-list';
-import { FileErrors } from '@/components/ui/file-errors';
+import { Dropzone } from '@/components/upload/dropzone';
+import { List } from '@/components/upload/list';
+import { Errors } from '@/components/upload/errors';
 
 function UploadSection() {
   return (
@@ -71,23 +94,23 @@ function UploadSection() {
       }}
     >
       <div className="space-y-4">
-        <FileDropzone />
-        <FileList />
-        <FileErrors />
+        <Dropzone />
+        <List />
+        <Errors />
       </div>
     </FileUploadProvider>
   );
 }
 ```
 
-### 3. Use in a form (example)
+### 4. Use in a form (example)
 
 ```tsx
 import { useState } from 'react';
 import { FileUploadProvider, useFileUpload } from '@astrify/react-s3-upload';
-import { FileDropzone } from '@/components/ui/file-dropzone';
-import { FileList } from '@/components/ui/file-list';
-import { FileErrors } from '@/components/ui/file-errors';
+import { Dropzone } from '@/components/upload/dropzone';
+import { List } from '@/components/upload/list';
+import { Errors } from '@/components/upload/errors';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -154,9 +177,9 @@ function FormContent() {
       <div className="space-y-2">
         <Label>Attachments</Label>
         <div className="space-y-4">
-          <FileErrors />
-          <FileDropzone />
-          <FileList />
+          <Errors />
+          <Dropzone />
+          <List />
         </div>
       </div>
 
@@ -178,8 +201,8 @@ function FormContent() {
 
 ```tsx
 import { FileUploadProvider } from '@astrify/react-s3-upload';
-import { FileDropzone } from '@/components/ui/file-dropzone';
-import { FileList } from '@/components/ui/file-list';
+import { Dropzone } from '@/components/upload/dropzone';
+import { List } from '@/components/upload/list';
 
 function BasicUpload() {
   return (
@@ -187,8 +210,8 @@ function BasicUpload() {
       presignEndpoint: '/api/signed-storage-url',
       maxFiles: 5
     }}>
-      <FileDropzone />
-      <FileList />
+      <Dropzone />
+      <List />
     </FileUploadProvider>
   );
 }
@@ -198,8 +221,8 @@ function BasicUpload() {
 
 ```tsx
 import { FileUploadProvider } from '@astrify/react-s3-upload';
-import { FileDropzone } from '@/components/ui/file-dropzone';
-import { FileList } from '@/components/ui/file-list';
+import { Dropzone } from '@/components/upload/dropzone';
+import { List } from '@/components/upload/list';
 
 function ImageUpload() {
   return (
@@ -208,8 +231,8 @@ function ImageUpload() {
       maxFiles: 12,
       accept: 'image/*'
     }}>
-      <FileDropzone />
-      <FileList showImagePreviews />
+      <Dropzone />
+      <List showImagePreviews />
     </FileUploadProvider>
   );
 }
@@ -237,8 +260,8 @@ function SecureUpload() {
         };
       }
     }}>
-      <FileDropzone />
-      <FileList />
+      <Dropzone />
+      <List />
     </FileUploadProvider>
   );
 }
@@ -431,20 +454,20 @@ app.post('/api/signed-storage-url', async (req, res) => {
 
 The following components are available through the shadcn registry:
 
-### file-dropzone
+### dropzone
 Drag-and-drop file selector with visual feedback.
 
-### file-list
+### list
 List view displaying files with progress bars, status, and actions.
 
-### file-errors
+### errors
 Error message display via toast notifications.
 
-### file-header
+### header
 Header component showing file count and bulk actions.
 
-### file-upload-complete
-Complete file upload system bundling all components together.
+### upload
+Complete file upload component bundling all components in one ready-to-use block.
 
 ## Features in Detail
 
@@ -525,10 +548,11 @@ pnpm dev
 src/
 ├── FileUploadContext.tsx    # Context provider with upload logic
 ├── components/              # UI components
-│   ├── FileDropzone.tsx    # Drag-and-drop file selector
-│   ├── FileList.tsx        # List view with progress tracking
-│   ├── FileErrors.tsx      # Error display component
-│   └── FileHeader.tsx      # Header with file count and actions
+│   └── upload/              # Upload-related components
+│       ├── dropzone.tsx     # Drag-and-drop file selector
+│       ├── list.tsx         # List view with progress tracking
+│       ├── errors.tsx       # Error display component
+│       └── header.tsx       # Header with file count and actions
 ├── lib/
 │   └── upload.ts           # Upload utilities and S3 integration
 ├── types/

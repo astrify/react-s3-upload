@@ -29,7 +29,7 @@ export type {
 
 // Component exports (undocumented - for development use)
 // Note: Production users should install via shadcn CLI for better integration
-export { FileDropzone } from "./components/FileDropzone";
-export { FileErrors } from "./components/FileErrors";
-export { FileHeader } from "./components/FileHeader";
-export { FileList } from "./components/FileList";
+export { Dropzone } from "./components/upload/dropzone";
+export { Errors } from "./components/upload/errors";
+export { Header } from "./components/upload/header";
+export { List } from "./components/upload/list";

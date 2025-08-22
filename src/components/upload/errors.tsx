@@ -2,7 +2,7 @@ import { useFileErrors, useFileUpload } from "@astrify/react-s3-upload";
 import { useEffect } from "react";
 import { Toaster, toast } from "sonner";
 
-export function FileErrors() {
+export function Errors() {
 	const errors = useFileErrors();
 	const { clearErrors } = useFileUpload();
 

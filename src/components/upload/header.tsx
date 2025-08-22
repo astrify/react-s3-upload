@@ -22,7 +22,7 @@ function acceptToString(accept: Accept | undefined): string | undefined {
 	return parts.join(",");
 }
 
-interface FileHeaderProps {
+interface HeaderProps {
 	className?: string;
 	title?: string;
 	showAddButton?: boolean;
@@ -31,14 +31,14 @@ interface FileHeaderProps {
 	clearButtonText?: string;
 }
 
-export function FileHeader({
+export function Header({
 	className,
 	title = "Files",
 	showAddButton = true,
 	showClearButton = true,
 	addButtonText = "Add files",
 	clearButtonText = "Remove all",
-}: FileHeaderProps) {
+}: HeaderProps) {
 	const { files, removeAll, addFiles, canAcceptMore, config } = useFileUpload();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 

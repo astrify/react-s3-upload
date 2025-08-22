@@ -215,17 +215,17 @@ function getStatusDisplay(file: FileUpload) {
 	}
 }
 
-interface FileListProps {
+interface ListProps {
 	showActions?: boolean;
 	showImagePreviews?: boolean;
 	className?: string;
 }
 
-export function FileList({
+export function List({
 	showActions = true,
 	showImagePreviews = false,
 	className,
-}: FileListProps) {
+}: ListProps) {
 	const { files, removeFile, retryUpload } = useFileUpload();
 
 	if (files.length === 0) {

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatBytes, useFileUpload } from "@astrify/react-s3-upload";
@@ -7,7 +5,7 @@ import { ImageIcon, UploadIcon } from "lucide-react";
 import type * as React from "react";
 import { type Accept, type FileRejection, useDropzone } from "react-dropzone";
 
-interface FileDropzoneProps {
+interface DropzoneProps {
 	onDrop?: (acceptedFiles: File[], rejectedFiles: FileRejection[]) => void;
 	maxSize?: number;
 	maxFiles?: number;
@@ -136,7 +134,7 @@ function getDropzoneText(
 	return { title, description, fileCountText, isImageOnly };
 }
 
-export function FileDropzone({
+export function Dropzone({
 	onDrop: onDropProp,
 	maxSize: maxSizeProp,
 	maxFiles: maxFilesProp,
@@ -145,7 +143,7 @@ export function FileDropzone({
 	emptyIcon,
 	emptyTitle,
 	emptyDescription,
-}: FileDropzoneProps) {
+}: DropzoneProps) {
 	// Get config from context (required)
 	const context = useFileUpload();
 

@@ -1,8 +1,8 @@
 import { FileUploadProvider, useFileUpload } from "@/FileUploadContext";
-import { FileDropzone } from "@/components/FileDropzone";
-import { FileErrors } from "@/components/FileErrors";
-import { FileHeader } from "@/components/FileHeader";
-import { FileList } from "@/components/FileList";
+import { Dropzone } from "@/components/upload/dropzone";
+import { Errors } from "@/components/upload/errors";
+import { Header } from "@/components/upload/header";
+import { List } from "@/components/upload/list";
 import {
 	calculateSHA256,
 	requestBatchSignedUrls,
@@ -27,10 +27,10 @@ function FileUploadSystem() {
 				}}
 			>
 				<div className="space-y-4">
-					<FileDropzone />
-					<FileErrors />
-					<FileHeader />
-					<FileList />
+					<Dropzone />
+					<Errors />
+					<Header />
+					<List />
 				</div>
 			</FileUploadProvider>
 			<Toaster position="bottom-right" richColors />

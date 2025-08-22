@@ -71,6 +71,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@inertiajs/react": "^2.1.2",
 		"@ryansonshine/commitizen": "4.2.8",
 		"@ryansonshine/cz-conventional-changelog": "3.3.4",
 		"@storybook/addon-essentials": "9.0.0-alpha.12",
@@ -124,6 +125,7 @@
 		]
 	},
 	"dependencies": {
+		"@radix-ui/react-label": "^2.1.7",
 		"@radix-ui/react-slot": "^1.2.3",
 		"@radix-ui/react-tooltip": "^1.2.8",
 		"@tailwindcss/vite": "^4.1.12",

@@ -69,6 +69,27 @@ export type FileType = File | { name: string; size: number; type: string };
 import type { Accept } from "react-dropzone";
 
 /**
+ * Upload library interface for dependency injection
+ */
+export interface UploadLib {
+	calculateSHA256: (file: File) => Promise<string>;
+	requestBatchSignedUrls: (
+		files: Array<{ file: File; sha256: string }>,
+		signedUrlEndpoint?: string,
+		signedUrlHeaders?:
+			| Record<string, string>
+			| (() => Record<string, string> | Promise<Record<string, string>>),
+	) => Promise<SignedUrlResponse[]>;
+	uploadFile: (params: {
+		file: File;
+		signedUrl: SignedUrlResponse;
+		sha256: string;
+		onProgress?: (sha256: string, progress: number) => void;
+		signal?: AbortSignal;
+	}) => Promise<void>;
+}
+
+/**
  * Configuration options for the FileUploadProvider
  */
 export interface FileUploadConfig {
@@ -82,6 +103,7 @@ export interface FileUploadConfig {
 	onUploadComplete?: (files: FileUpload[]) => void;
 	onUploadError?: (errors: Array<{ file: File; error: unknown }>) => void;
 	onFilesChange?: (files: File[]) => void;
+	uploadLib?: UploadLib;
 }
 
 /**

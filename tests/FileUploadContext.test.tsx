@@ -4,29 +4,29 @@ import {
 	useFileErrors,
 	useFileUpload,
 } from "@/FileUploadContext";
-import type { FileUpload, SignedUrlResponse, FileUploadConfig } from "@/types/file-upload";
+import {
+	createFastUploadFake,
+	createFastUploadErrorFake,
+	createFastUploadRetryFake,
+} from "@/lib/upload-fakes";
+import type { FileUpload, FileUploadConfig, UploadLib } from "@/types/file-upload";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the upload utilities
-vi.mock("@/lib/upload", () => ({
-	uploadFile: vi.fn(),
-	requestBatchSignedUrls: vi.fn(),
-	calculateSHA256: vi.fn(),
-}));
-
-import {
-	calculateSHA256,
-	requestBatchSignedUrls,
-	uploadFile,
-} from "@/lib/upload";
-
 describe("FileUploadContext", () => {
 	// Helper to create a wrapper component with provider
-	const createWrapper = (props?: Partial<FileUploadProviderProps>) => {
+	const createWrapper = (
+		props?: Partial<FileUploadProviderProps>,
+		uploadLib?: UploadLib,
+	) => {
 		return ({ children }: { children: ReactNode }) => (
-			<FileUploadProvider {...props}>{children}</FileUploadProvider>
+			<FileUploadProvider
+				{...props}
+				config={{ ...props?.config, uploadLib }}
+			>
+				{children}
+			</FileUploadProvider>
 		);
 	};
 
@@ -38,6 +38,24 @@ describe("FileUploadContext", () => {
 	): File => {
 		const blob = new Blob(["a".repeat(size)], { type });
 		return new File([blob], name, { type });
+	};
+
+	// Helper to create custom fake that returns same hash for different files (for duplicate testing)
+	const createDuplicateUploadFake = () => {
+		const baseFake = createFastUploadFake();
+		return {
+			...baseFake,
+			calculateSHA256: () => Promise.resolve("duplicate-hash"), // Always return same hash
+		};
+	};
+
+	// Helper to create hanging upload fake (doesn't complete)
+	const createHangingUploadFake = (): UploadLib => {
+		const baseFake = createFastUploadFake();
+		return {
+			...baseFake,
+			uploadFile: async () => new Promise(() => {}), // Never resolves
+		};
 	};
 
 	// Mock URL methods
@@ -134,53 +152,30 @@ describe("FileUploadContext", () => {
 	describe("addFiles", () => {
 		it("should add files and request signed URLs", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
-			const mockSignedUrlResponse: SignedUrlResponse = {
-				sha256: mockHash,
-				bucket: "test-bucket",
-				key: "test-key",
-				url: "https://signed-url.com",
-			};
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				mockSignedUrlResponse,
-			]);
-			// Don't let upload complete
-			let uploadResolve: any;
-			vi.mocked(uploadFile).mockImplementation(
-				() =>
-					new Promise((resolve) => {
-						uploadResolve = resolve;
-					}),
-			);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
 				await result.current.addFiles([mockFile]);
 			});
 
-			// File starts as pending, then moves to uploading
-			// Check that it exists and has the right properties
+			// Wait for file to be processed and upload to complete
 			await waitFor(() => {
 				expect(result.current.files).toHaveLength(1);
 				expect(result.current.files[0].name).toBe("test.txt");
+				expect(result.current.files[0].status).toBe("complete");
 			});
-
-			expect(calculateSHA256).toHaveBeenCalledWith(mockFile);
-			expect(requestBatchSignedUrls).toHaveBeenCalled();
-
-			// Cleanup - let upload complete
-			uploadResolve?.();
 		});
 
 		it("should handle file limit restrictions", async () => {
 			const config: FileUploadConfig = { maxFiles: 2 };
+			const uploadLib = createFastUploadFake();
+			
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper({ config }),
+				wrapper: createWrapper({ config }, uploadLib),
 			});
 
 			const files = [
@@ -188,16 +183,6 @@ describe("FileUploadContext", () => {
 				createMockFile("file2.txt"),
 				createMockFile("file3.txt"),
 			];
-
-			vi.mocked(calculateSHA256)
-				.mockResolvedValueOnce("hash1")
-				.mockResolvedValueOnce("hash2")
-				.mockResolvedValueOnce("hash3");
-
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: "hash1", bucket: "", key: "", url: "url1" },
-				{ sha256: "hash2", bucket: "", key: "", url: "url2" },
-			]);
 
 			await act(async () => {
 				await result.current.addFiles(files);
@@ -219,15 +204,10 @@ describe("FileUploadContext", () => {
 		it("should detect and handle duplicate files", async () => {
 			const mockFile1 = createMockFile("test.txt");
 			const mockFile2 = createMockFile("test-copy.txt");
-			const mockHash = "same-hash";
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
+			const uploadLib = createDuplicateUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			// Add first file
@@ -235,7 +215,9 @@ describe("FileUploadContext", () => {
 				await result.current.addFiles([mockFile1]);
 			});
 
-			expect(result.current.files).toHaveLength(1);
+			await waitFor(() => {
+				expect(result.current.files).toHaveLength(1);
+			});
 
 			// Try to add duplicate
 			await act(async () => {
@@ -251,15 +233,10 @@ describe("FileUploadContext", () => {
 
 		it("should create image previews", async () => {
 			const mockImageFile = createMockFile("image.jpg", 1024, "image/jpeg");
-			const mockHash = "image-hash";
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
@@ -267,20 +244,19 @@ describe("FileUploadContext", () => {
 			});
 
 			expect(mockCreateObjectURL).toHaveBeenCalledWith(mockImageFile);
-			expect(result.current.files[0].preview).toBe("blob:mock-url");
+			
+			await waitFor(() => {
+				expect(result.current.files[0]?.preview).toBe("blob:mock-url");
+			});
 		});
 
 		it("should call onFilesChange callback", async () => {
 			const onFilesChange = vi.fn();
 			const mockFile = createMockFile("test.txt");
-
-			vi.mocked(calculateSHA256).mockResolvedValue("hash1");
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: "hash1", bucket: "", key: "", url: "url1" },
-			]);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper({ config: { onFilesChange } }),
+				wrapper: createWrapper({ config: { onFilesChange } }, uploadLib),
 			});
 
 			await act(async () => {
@@ -294,25 +270,22 @@ describe("FileUploadContext", () => {
 	describe("removeFile", () => {
 		it("should remove a file and cleanup resources", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
 				await result.current.addFiles([mockFile]);
 			});
 
-			expect(result.current.files).toHaveLength(1);
+			await waitFor(() => {
+				expect(result.current.files).toHaveLength(1);
+			});
 
 			act(() => {
-				result.current.removeFile(mockHash);
+				result.current.removeFile(result.current.files[0].id);
 			});
 
 			expect(result.current.files).toHaveLength(0);
@@ -321,8 +294,8 @@ describe("FileUploadContext", () => {
 
 		it("should abort upload in progress when removing", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
 			const abortSpy = vi.fn();
+			const uploadLib = createHangingUploadFake();
 
 			// Mock AbortController
 			const MockAbortController = vi.fn().mockImplementation(() => ({
@@ -331,29 +304,22 @@ describe("FileUploadContext", () => {
 			}));
 			global.AbortController = MockAbortController as any;
 
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
-
-			// Make uploadFile hang to simulate ongoing upload
-			vi.mocked(uploadFile).mockImplementation(() => new Promise(() => {}));
-
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
 				await result.current.addFiles([mockFile]);
 			});
 
-			// Wait for upload to start
+			// Wait for file to be added and upload to start
 			await waitFor(() => {
-				expect(uploadFile).toHaveBeenCalled();
+				expect(result.current.files).toHaveLength(1);
+				expect(result.current.files[0].status).toBe("uploading");
 			});
 
 			act(() => {
-				result.current.removeFile(mockHash);
+				result.current.removeFile(result.current.files[0].id);
 			});
 
 			expect(abortSpy).toHaveBeenCalled();
@@ -363,25 +329,19 @@ describe("FileUploadContext", () => {
 	describe("removeAll", () => {
 		it("should remove all files and cleanup resources", async () => {
 			const files = [createMockFile("file1.txt"), createMockFile("file2.txt")];
-
-			vi.mocked(calculateSHA256)
-				.mockResolvedValueOnce("hash1")
-				.mockResolvedValueOnce("hash2");
-
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: "hash1", bucket: "", key: "", url: "url1" },
-				{ sha256: "hash2", bucket: "", key: "", url: "url2" },
-			]);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
 				await result.current.addFiles(files);
 			});
 
-			expect(result.current.files).toHaveLength(2);
+			await waitFor(() => {
+				expect(result.current.files).toHaveLength(2);
+			});
 
 			act(() => {
 				result.current.removeAll();
@@ -396,16 +356,10 @@ describe("FileUploadContext", () => {
 	describe("upload queue processing", () => {
 		it("should automatically start uploading pending files", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
-			vi.mocked(uploadFile).mockResolvedValue(undefined);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
@@ -415,11 +369,9 @@ describe("FileUploadContext", () => {
 			// Wait for upload to complete
 			await waitFor(() => {
 				expect(result.current.files[0]?.status).toBe("complete");
+				expect(result.current.hasComplete).toBe(true);
+				expect(result.current.isUploading).toBe(false);
 			});
-
-			expect(uploadFile).toHaveBeenCalled();
-			expect(result.current.hasComplete).toBe(true);
-			expect(result.current.isUploading).toBe(false);
 		});
 
 		it("should respect max concurrency limit", async () => {
@@ -427,34 +379,22 @@ describe("FileUploadContext", () => {
 				createMockFile(`file${i}.txt`),
 			);
 
-			const hashes = files.map((_, i) => `hash${i}`);
-
-			hashes.forEach((hash, _i) => {
-				vi.mocked(calculateSHA256).mockResolvedValueOnce(hash);
-			});
-
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue(
-				hashes.map((hash) => ({
-					sha256: hash,
-					bucket: "",
-					key: "",
-					url: `url-${hash}`,
-				})),
-			);
-
-			// Make uploads hang to count concurrent uploads
+			// Create fake that tracks concurrent uploads
 			let activeUploads = 0;
 			let maxConcurrent = 0;
-
-			vi.mocked(uploadFile).mockImplementation(async () => {
-				activeUploads++;
-				maxConcurrent = Math.max(maxConcurrent, activeUploads);
-				await new Promise((resolve) => setTimeout(resolve, 10));
-				activeUploads--;
-			});
+			const uploadLib = {
+				...createFastUploadFake(),
+				uploadFile: async ({ sha256, onProgress }: any) => {
+					activeUploads++;
+					maxConcurrent = Math.max(maxConcurrent, activeUploads);
+					await new Promise((resolve) => setTimeout(resolve, 10));
+					onProgress?.(sha256, 1);
+					activeUploads--;
+				},
+			};
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
@@ -477,22 +417,11 @@ describe("FileUploadContext", () => {
 
 		it("should handle upload errors", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
-			const mockError = {
-				type: "s3_upload",
-				message: "Upload failed",
-				details: {},
-			};
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
-			vi.mocked(uploadFile).mockRejectedValue(mockError);
-
+			const uploadLib = createFastUploadErrorFake("network_error");
 			const onUploadError = vi.fn();
+
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper({ config: { onUploadError } }),
+				wrapper: createWrapper({ config: { onUploadError } }, uploadLib),
 			});
 
 			await act(async () => {
@@ -510,21 +439,10 @@ describe("FileUploadContext", () => {
 
 		it("should handle duplicate file errors specially", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
-			const duplicateError = {
-				type: "duplicate_file" as const,
-				message: "File already exists",
-				details: {},
-			};
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
-			vi.mocked(uploadFile).mockRejectedValue(duplicateError);
+			const uploadLib = createFastUploadErrorFake("duplicate_file");
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
@@ -548,23 +466,10 @@ describe("FileUploadContext", () => {
 
 		it("should track upload progress", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
-			const progressValues: number[] = [];
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
-
-			vi.mocked(uploadFile).mockImplementation(async ({ sha256, onProgress }) => {
-				onProgress?.(sha256, 0.25);
-				onProgress?.(sha256, 0.5);
-				onProgress?.(sha256, 0.75);
-				onProgress?.(sha256, 1);
-			});
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
@@ -573,24 +478,17 @@ describe("FileUploadContext", () => {
 
 			await waitFor(() => {
 				expect(result.current.files[0]?.status).toBe("complete");
+				expect(result.current.files[0].progress).toBe(100);
 			});
-
-			expect(result.current.files[0].progress).toBe(100);
 		});
 
 		it("should call onUploadComplete callback", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
 			const onUploadComplete = vi.fn();
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
-			vi.mocked(uploadFile).mockResolvedValue(undefined);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper({ config: { onUploadComplete } }),
+				wrapper: createWrapper({ config: { onUploadComplete } }, uploadLib),
 			});
 
 			await act(async () => {
@@ -604,8 +502,6 @@ describe("FileUploadContext", () => {
 			});
 
 			// The callback receives the file at the time it's called
-			// which may have stale data due to closure
-			expect(onUploadComplete).toHaveBeenCalled();
 			expect(onUploadComplete.mock.calls[0][0]).toHaveLength(1);
 			expect(onUploadComplete.mock.calls[0][0][0]).toHaveProperty(
 				"name",
@@ -617,22 +513,10 @@ describe("FileUploadContext", () => {
 	describe("retryUpload", () => {
 		it("should retry failed upload", async () => {
 			const mockFile = createMockFile("test.txt");
-			const mockHash = "abc123";
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
-
-			// First upload fails
-			vi.mocked(uploadFile).mockRejectedValueOnce({
-				type: "s3_upload",
-				message: "Network error",
-				details: {},
-			});
+			const uploadLib = createFastUploadRetryFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
@@ -643,11 +527,8 @@ describe("FileUploadContext", () => {
 				expect(result.current.files[0]?.status).toBe("error");
 			});
 
-			// Now make upload succeed
-			vi.mocked(uploadFile).mockResolvedValue(undefined);
-
 			await act(async () => {
-				await result.current.retryUpload(mockHash);
+				await result.current.retryUpload(result.current.files[0].id);
 			});
 
 			await waitFor(() => {
@@ -712,26 +593,25 @@ describe("FileUploadContext", () => {
 	describe("cleanup", () => {
 		it("should cleanup preview URLs when removing files", async () => {
 			const mockImageFile = createMockFile("image.jpg", 1024, "image/jpeg");
-			const mockHash = "image-hash";
-
-			vi.mocked(calculateSHA256).mockResolvedValue(mockHash);
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: mockHash, bucket: "", key: "", url: "url1" },
-			]);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
 				await result.current.addFiles([mockImageFile]);
 			});
 
+			await waitFor(() => {
+				expect(result.current.files).toHaveLength(1);
+			});
+
 			const previewUrl = result.current.files[0].preview;
 			expect(previewUrl).toBeDefined();
 
 			act(() => {
-				result.current.removeFile(mockHash);
+				result.current.removeFile(result.current.files[0].id);
 			});
 
 			expect(mockRevokeObjectURL).toHaveBeenCalledWith(previewUrl);
@@ -742,25 +622,19 @@ describe("FileUploadContext", () => {
 				createMockFile("image1.jpg", 1024, "image/jpeg"),
 				createMockFile("image2.jpg", 1024, "image/jpeg"),
 			];
-
-			vi.mocked(calculateSHA256)
-				.mockResolvedValueOnce("hash1")
-				.mockResolvedValueOnce("hash2");
-
-			vi.mocked(requestBatchSignedUrls).mockResolvedValue([
-				{ sha256: "hash1", bucket: "", key: "", url: "url1" },
-				{ sha256: "hash2", bucket: "", key: "", url: "url2" },
-			]);
+			const uploadLib = createFastUploadFake();
 
 			const { result } = renderHook(() => useFileUpload(), {
-				wrapper: createWrapper(),
+				wrapper: createWrapper({}, uploadLib),
 			});
 
 			await act(async () => {
 				await result.current.addFiles(files);
 			});
 
-			expect(result.current.files).toHaveLength(2);
+			await waitFor(() => {
+				expect(result.current.files).toHaveLength(2);
+			});
 
 			act(() => {
 				result.current.reset();

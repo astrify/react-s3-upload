@@ -1,13 +1,10 @@
-import {
-	calculateSHA256,
-	requestBatchSignedUrls,
-	uploadFile,
-} from "@/lib/upload";
+import * as defaultUploadLib from "@/lib/upload";
 import type {
 	FileUpload,
 	FileUploadConfig,
 	SignedUrlRequest,
 	UploadError,
+	UploadLib,
 	UploadStatus,
 	UseFileUploadResult,
 } from "@/types/file-upload";
@@ -48,6 +45,7 @@ export function FileUploadProvider({
 			onUploadComplete: config.onUploadComplete,
 			onUploadError: config.onUploadError,
 			onFilesChange: config.onFilesChange,
+			uploadLib: config.uploadLib,
 		}),
 		[
 			config.maxFiles,
@@ -58,7 +56,23 @@ export function FileUploadProvider({
 			config.onUploadComplete,
 			config.onUploadError,
 			config.onFilesChange,
+			config.uploadLib,
 		],
+	);
+
+	// Upload library - use injected or default to real implementation
+	const uploadLib = useMemo<UploadLib>(
+		() => ({
+			calculateSHA256:
+				mergedConfig.uploadLib?.calculateSHA256 ??
+				defaultUploadLib.calculateSHA256,
+			requestBatchSignedUrls:
+				mergedConfig.uploadLib?.requestBatchSignedUrls ??
+				defaultUploadLib.requestBatchSignedUrls,
+			uploadFile:
+				mergedConfig.uploadLib?.uploadFile ?? defaultUploadLib.uploadFile,
+		}),
+		[mergedConfig.uploadLib],
 	);
 
 	// Initialize with default files - validate they have status 'complete'
@@ -141,7 +155,7 @@ export function FileUploadProvider({
 
 			try {
 				// Request signed URLs from server
-				const signedUrls = await requestBatchSignedUrls(
+				const signedUrls = await uploadLib.requestBatchSignedUrls(
 					fileRequests.map((req) => ({
 						file: fileRefs.current.get(req.sha256) || new File([], req.name),
 						sha256: req.sha256,
@@ -199,6 +213,7 @@ export function FileUploadProvider({
 			mergedConfig.signedUrlHeaders,
 			fileUploads,
 			updateFileUpload,
+			uploadLib,
 		],
 	);
 
@@ -272,7 +287,7 @@ export function FileUploadProvider({
 			try {
 				updateFileUpload(fileUpload.sha256, { status: "uploading" });
 
-				await uploadFile({
+				await uploadLib.uploadFile({
 					file,
 					sha256: fileUpload.sha256,
 					signal: abortController.signal,
@@ -337,6 +352,7 @@ export function FileUploadProvider({
 			mergedConfig.onUploadError,
 			updateFileUpload,
 			fileUploads,
+			uploadLib,
 		],
 	);
 
@@ -363,7 +379,7 @@ export function FileUploadProvider({
 	const processFileToRequest = useCallback(
 		async (file: File): Promise<SignedUrlRequest | null> => {
 			try {
-				const hash = await calculateSHA256(file);
+				const hash = await uploadLib.calculateSHA256(file);
 				fileRefs.current.set(hash, file);
 
 				return {
@@ -379,7 +395,7 @@ export function FileUploadProvider({
 				return null;
 			}
 		},
-		[],
+		[uploadLib],
 	);
 
 	// Helper: Handle duplicate file

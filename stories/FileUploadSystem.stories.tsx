@@ -4,19 +4,16 @@ import { Errors } from "@/components/upload/errors";
 import { Header } from "@/components/upload/header";
 import { List } from "@/components/upload/list";
 import {
-	calculateSHA256,
-	requestBatchSignedUrls,
-	uploadFile,
-	uploadToS3Storage,
-} from "@/lib/upload";
-import type { SignedUrlResponse, UploadError } from "@/types/file-upload";
+	createUploadSuccessFake,
+	createUploadFailureFake,
+	createUploadValidationErrorFake,
+} from "@/lib/upload-fakes";
 import type { Meta, StoryObj } from "@storybook/react";
 import { within } from "@storybook/test";
 import { Toaster } from "sonner";
-import { mocked } from "storybook/test";
 
 // Component that composes all file upload components
-function FileUploadSystem() {
+function FileUploadSystem({ uploadLib = createUploadSuccessFake() }: { uploadLib?: any }) {
 	return (
 		<>
 			<FileUploadProvider
@@ -24,6 +21,7 @@ function FileUploadSystem() {
 					maxFiles: 10,
 					maxSize: 50 * 1024 * 1024, // 50MB
 					signedUrlEndpoint: "/upload/signed-url",
+					uploadLib,
 				}}
 			>
 				<div className="space-y-4">
@@ -67,60 +65,10 @@ const createMockFile = (
 	return new File([content], name, { type });
 };
 
-// Helper to simulate upload progress
-const simulateUploadProgress = async (
-	onProgress?: (progress: number) => void,
-	duration = 2000,
-) => {
-	const steps = 20;
-	const stepDuration = duration / steps;
-
-	for (let i = 0; i <= steps; i++) {
-		const progress = i / steps;
-		if (onProgress) {
-			onProgress(progress);
-		}
-		if (i < steps) {
-			await new Promise((resolve) => setTimeout(resolve, stepDuration));
-		}
-	}
-};
-
 // Shows various file types being uploaded
 export const MultipleFileTypes: Story = {
-	beforeEach: async () => {
-		mocked(calculateSHA256).mockImplementation(async (file: File) => {
-			return `mock-hash-${file.name}`;
-		});
-
-		mocked(requestBatchSignedUrls).mockImplementation(async (files) => {
-			const mockResponses: SignedUrlResponse[] = files.map((fileData) => ({
-				sha256: fileData.sha256,
-				bucket: "mock-bucket",
-				key: `uploads/${fileData.file.name}`,
-				url: `https://mock-s3.amazonaws.com/mock-bucket/uploads/${fileData.file.name}?signature=mock`,
-			}));
-			await new Promise((resolve) => setTimeout(resolve, 200));
-			return mockResponses;
-		});
-
-		mocked(uploadToS3Storage).mockImplementation(
-			async ({ file, onProgress }) => {
-				// Variable speed based on file type for visual variety
-				const duration = file.type.includes("image") ? 3000 : 2000;
-				await simulateUploadProgress(onProgress, duration);
-				return Promise.resolve();
-			},
-		);
-
-		mocked(uploadFile).mockImplementation(async ({ file, sha256, onProgress }) => {
-			await new Promise((resolve) => setTimeout(resolve, 200));
-			const duration = file.type.includes("image") ? 3000 : 2000;
-			await simulateUploadProgress((progress) => {
-				onProgress?.(sha256, progress);
-			}, duration);
-			return Promise.resolve();
-		});
+	args: {
+		uploadLib: createUploadSuccessFake(),
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
@@ -153,62 +101,8 @@ export const MultipleFileTypes: Story = {
 
 // Shows retry functionality
 export const WithRetry: Story = {
-	beforeEach: async () => {
-		let retryCount = 0;
-		
-		mocked(calculateSHA256).mockImplementation(async (file: File) => {
-			return `mock-hash-${file.name}`;
-		});
-
-		mocked(requestBatchSignedUrls).mockImplementation(async (files) => {
-			const mockResponses: SignedUrlResponse[] = files.map((fileData) => ({
-				sha256: fileData.sha256,
-				bucket: "mock-bucket",
-				key: `uploads/${fileData.file.name}`,
-				url: `https://mock-s3.amazonaws.com/mock-bucket/uploads/${fileData.file.name}?signature=mock`,
-			}));
-			await new Promise((resolve) => setTimeout(resolve, 200));
-			return mockResponses;
-		});
-
-		mocked(uploadToS3Storage).mockImplementation(
-			async ({ file, onProgress }) => {
-				// Fail first attempt for specific file
-				if (file.name === "retry-me.txt" && retryCount === 0) {
-					retryCount++;
-					const error = {
-						type: "network_error",
-						message: "Failed to connect to storage service. Please check your connection and try again.",
-					} as UploadError;
-					throw error;
-				}
-				await simulateUploadProgress(onProgress, 1500);
-				return Promise.resolve();
-			},
-		);
-
-		mocked(uploadFile).mockImplementation(async ({ file, sha256, signedUrl, onProgress }) => {
-			if (signedUrl) {
-				return mocked(uploadToS3Storage)({
-					file,
-					signedUrl: signedUrl.url,
-					onProgress: (progress) => onProgress?.(sha256, progress),
-				});
-			}
-			await new Promise((resolve) => setTimeout(resolve, 200));
-			if (file.name === "retry-me.txt" && retryCount === 0) {
-				retryCount++;
-				const error = {
-					type: "network_error",
-					message: "Failed to connect to storage service. Please check your connection and try again.",
-				} as UploadError;
-				throw error;
-			}
-			await simulateUploadProgress((progress) => {
-				onProgress?.(sha256, progress);
-			}, 1500);
-			return Promise.resolve();
-		});
+	args: {
+		uploadLib: createUploadFailureFake(/retry-me/),
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
@@ -239,34 +133,8 @@ export const WithRetry: Story = {
 
 // Shows validation errors
 export const ValidationErrors: Story = {
-	beforeEach: async () => {
-		mocked(calculateSHA256).mockImplementation(async (file: File) => {
-			return `mock-hash-${file.name}`;
-		});
-
-		mocked(requestBatchSignedUrls).mockImplementation(async () => {
-			// Return validation error
-			const error = {
-				type: "validation_error",
-				message: "File size exceeds maximum allowed (50 MB)",
-			} as UploadError;
-			throw error;
-		});
-
-		mocked(uploadToS3Storage).mockImplementation(
-			async ({ file, onProgress }) => {
-				await simulateUploadProgress(onProgress, 1500);
-				return Promise.resolve();
-			},
-		);
-
-		mocked(uploadFile).mockImplementation(async () => {
-			const error = {
-				type: "validation_error",
-				message: "File size exceeds maximum allowed (50 MB)",
-			} as UploadError;
-			throw error;
-		});
+	args: {
+		uploadLib: createUploadValidationErrorFake(),
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);

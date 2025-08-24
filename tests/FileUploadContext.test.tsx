@@ -1,11 +1,10 @@
 import {
-	type FileUploadConfig,
 	FileUploadProvider,
 	type FileUploadProviderProps,
 	useFileErrors,
 	useFileUpload,
 } from "@/FileUploadContext";
-import type { FileUpload, SignedUrlResponse } from "@/types/file-upload";
+import type { FileUpload, SignedUrlResponse, FileUploadConfig } from "@/types/file-upload";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

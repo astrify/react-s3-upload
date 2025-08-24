@@ -3,8 +3,6 @@ export {
 	FileUploadProvider,
 	useFileUpload,
 	useFileErrors,
-	type FileUploadConfig,
-	type FileUploadContextValue,
 	type FileUploadProviderProps,
 } from "./FileUploadContext";
 
@@ -17,14 +15,16 @@ export {
 	formatBytes,
 } from "./lib/upload";
 
-// TypesOk
+// Types
 export type {
 	FileUpload,
+	FileUploadConfig,
+	UseFileUploadResult,
 	FileType,
 	UploadStatus,
 	UploadError,
 	SignedUrlResponse,
-	FileRequest,
+	SignedUrlRequest,
 } from "./types/file-upload";
 
 // Component exports (undocumented - for development use)

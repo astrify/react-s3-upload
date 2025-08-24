@@ -1,12 +1,3 @@
-// New state architecture types
-export interface FileRequest {
-	name: string; // original filename
-	size: number; // in bytes
-	type: string; // MIME type
-	sha256: string; // unique hash (used as an id to dedupe + match retries)
-	preview?: string; // optional preview URL for images
-}
-
 export interface FileUpload {
 	id: string; // same as sha256 for continuity
 	name: string;
@@ -22,7 +13,16 @@ export interface FileUpload {
 	file?: File; // Keep original File object for operations
 }
 
-// FileMetadata removed - use FileRequest with optional sha256 instead
+/**
+ * Payload for Signed URL endpoint
+ */
+export interface SignedUrlRequest {
+	name: string; // original filename
+	size: number; // in bytes
+	type: string; // MIME type
+	sha256: string; // unique hash (used as an id to dedupe + match retries)
+	preview?: string; // optional preview URL for images
+}
 
 /**
  * Response from signed URL endpoint
@@ -64,3 +64,54 @@ export interface UploadError {
 }
 
 export type FileType = File | { name: string; size: number; type: string };
+
+// Import Accept type from react-dropzone for FileUploadConfig
+import type { Accept } from "react-dropzone";
+
+/**
+ * Configuration options for the FileUploadProvider
+ */
+export interface FileUploadConfig {
+	maxFiles?: number;
+	maxSize?: number;
+	accept?: Accept;
+	signedUrlEndpoint?: string;
+	signedUrlHeaders?:
+		| Record<string, string>
+		| (() => Record<string, string> | Promise<Record<string, string>>);
+	onUploadComplete?: (files: FileUpload[]) => void;
+	onUploadError?: (errors: Array<{ file: File; error: unknown }>) => void;
+	onFilesChange?: (files: File[]) => void;
+}
+
+/**
+ * Return type for the useFileUpload hook
+ */
+export interface UseFileUploadResult {
+	// State
+	files: FileUpload[];
+	errors: UploadError[];
+	isUploading: boolean;
+	remainingSlots: number;
+	config: FileUploadConfig;
+
+	// Status flags
+	hasPending: boolean;
+	hasUploading: boolean;
+	hasErrors: boolean;
+	hasComplete: boolean;
+
+	// Actions
+	addFiles: (files: File[]) => Promise<void>;
+	removeFile: (fileId: string) => void;
+	removeAll: () => void;
+	retryUpload: (fileId: string) => Promise<void>;
+	reset: () => void;
+	addErrors: (errors: UploadError[]) => void;
+	clearErrors: () => void;
+
+	// Utilities
+	canAcceptMore: boolean;
+	acceptedFileTypes: Accept | undefined;
+	maxFileSize: number;
+}

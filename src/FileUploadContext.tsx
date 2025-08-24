@@ -4,10 +4,12 @@ import {
 	uploadFile,
 } from "@/lib/upload";
 import type {
-	FileRequest,
 	FileUpload,
+	FileUploadConfig,
+	SignedUrlRequest,
 	UploadError,
 	UploadStatus,
+	UseFileUploadResult,
 } from "@/types/file-upload";
 import {
 	type ReactNode,
@@ -19,51 +21,8 @@ import {
 	useRef,
 	useState,
 } from "react";
-import type { Accept } from "react-dropzone";
 
-export interface FileUploadConfig {
-	maxFiles?: number;
-	maxSize?: number;
-	accept?: Accept;
-	signedUrlEndpoint?: string;
-	signedUrlHeaders?:
-		| Record<string, string>
-		| (() => Record<string, string> | Promise<Record<string, string>>);
-	onUploadComplete?: (files: FileUpload[]) => void;
-	onUploadError?: (errors: Array<{ file: File; error: unknown }>) => void;
-	onFilesChange?: (files: File[]) => void;
-}
-
-export interface FileUploadContextValue {
-	// State
-	files: FileUpload[];
-	errors: UploadError[];
-	isUploading: boolean;
-	remainingSlots: number;
-	config: FileUploadConfig;
-
-	// Status flags
-	hasPending: boolean;
-	hasUploading: boolean;
-	hasErrors: boolean;
-	hasComplete: boolean;
-
-	// Actions
-	addFiles: (files: File[]) => Promise<void>;
-	removeFile: (fileId: string) => void;
-	removeAll: () => void;
-	retryUpload: (fileId: string) => Promise<void>;
-	reset: () => void;
-	addErrors: (errors: UploadError[]) => void;
-	clearErrors: () => void;
-
-	// Utilities
-	canAcceptMore: boolean;
-	acceptedFileTypes: Accept | undefined;
-	maxFileSize: number;
-}
-
-const FileUploadContext = createContext<FileUploadContextValue | undefined>(
+const FileUploadContext = createContext<UseFileUploadResult | undefined>(
 	undefined,
 );
 
@@ -72,8 +31,6 @@ export interface FileUploadProviderProps {
 	config?: FileUploadConfig;
 	defaultFiles?: FileUpload[];
 }
-
-// No QueuedUpload interface needed - queue worker pulls from FileUploadCollection
 
 export function FileUploadProvider({
 	children,
@@ -174,12 +131,12 @@ export function FileUploadProvider({
 	// Helper: Send file request for signed URLs
 	const sendFileRequest = useCallback(
 		async (
-			fileRequests: FileRequest[],
+			fileRequests: SignedUrlRequest[],
 		): Promise<{
-			success: FileRequest[];
+			success: SignedUrlRequest[];
 			errors: UploadError[];
 		}> => {
-			const success: FileRequest[] = [];
+			const success: SignedUrlRequest[] = [];
 			const errorMessages: UploadError[] = [];
 
 			try {
@@ -402,9 +359,9 @@ export function FileUploadProvider({
 		});
 	}, [files, activeUploads, uploadSingleFile]);
 
-	// Helper: Process single file into FileRequest
+	// Helper: Process single file into SignedUrlRequest
 	const processFileToRequest = useCallback(
-		async (file: File): Promise<FileRequest | null> => {
+		async (file: File): Promise<SignedUrlRequest | null> => {
 			try {
 				const hash = await calculateSHA256(file);
 				fileRefs.current.set(hash, file);
@@ -470,7 +427,7 @@ export function FileUploadProvider({
 			}
 
 			// Process files into requests
-			const fileRequests: FileRequest[] = [];
+			const fileRequests: SignedUrlRequest[] = [];
 			const processingErrors: UploadError[] = [];
 
 			for (const file of filesToProcess) {
@@ -535,8 +492,8 @@ export function FileUploadProvider({
 				return;
 			}
 
-			// Create FileRequest for retry
-			const fileRequest: FileRequest = {
+			// Create SignedUrlRequest for retry
+			const fileRequest: SignedUrlRequest = {
 				name: fileUpload.name,
 				size: fileUpload.size,
 				type: fileUpload.type,
@@ -571,7 +528,7 @@ export function FileUploadProvider({
 		setErrors([]);
 	}, []);
 
-	const contextValue: FileUploadContextValue = {
+	const contextValue: UseFileUploadResult = {
 		files,
 		errors,
 		isUploading,

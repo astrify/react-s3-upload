@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
-class PresignController extends Controller
+class SignedUrlController extends Controller
 {
     /**
      * Handle the incoming request.

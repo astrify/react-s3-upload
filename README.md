@@ -63,7 +63,7 @@ function App() {
     <>
       <Upload 
         config={{
-          presignEndpoint: '/api/signed-storage-url',
+          signedUrlEndpoint: '/upload/signed-url',
           maxFiles: 10,
           maxSize: 50 * 1024 * 1024, // 50MB
           accept: 'image/*,application/pdf'
@@ -87,7 +87,7 @@ function UploadSection() {
   return (
     <FileUploadProvider 
       config={{
-        presignEndpoint: '/api/signed-storage-url',
+        signedUrlEndpoint: '/upload/signed-url',
         maxFiles: 10,
         maxSize: 50 * 1024 * 1024, // 50MB
         accept: 'image/*,application/pdf'
@@ -120,7 +120,7 @@ function UploadForm() {
   return (
     <FileUploadProvider 
       config={{
-        presignEndpoint: '/api/signed-storage-url',
+        signedUrlEndpoint: '/upload/signed-url',
         maxFiles: 5,
         maxSize: 10 * 1024 * 1024, // 10MB
         accept: 'image/*,application/pdf'
@@ -207,7 +207,7 @@ import { List } from '@/components/upload/list';
 function BasicUpload() {
   return (
     <FileUploadProvider config={{
-      presignEndpoint: '/api/signed-storage-url',
+      signedUrlEndpoint: '/upload/signed-url',
       maxFiles: 5
     }}>
       <Dropzone />
@@ -227,7 +227,7 @@ import { List } from '@/components/upload/list';
 function ImageUpload() {
   return (
     <FileUploadProvider config={{
-      presignEndpoint: '/api/signed-storage-url',
+      signedUrlEndpoint: '/upload/signed-url',
       maxFiles: 12,
       accept: 'image/*'
     }}>
@@ -246,7 +246,7 @@ import { FileUploadProvider } from '@astrify/react-s3-upload';
 function SecureUpload() {
   return (
     <FileUploadProvider config={{
-      presignEndpoint: '/api/signed-storage-url',
+      signedUrlEndpoint: '/upload/signed-url',
       // Static headers
       presignHeaders: {
         'X-API-Key': 'your-api-key'
@@ -314,7 +314,7 @@ interface FileUploadConfig {
   maxSize?: number;               // Maximum file size in bytes (default: 50MB)
   accept?: string;                // Accepted file types (default: '*')
   multiple?: boolean;             // Allow multiple file selection (default: true)
-  presignEndpoint?: string;       // Endpoint for signed URL generation (default: '/signed-storage-url')
+  signedUrlEndpoint?: string;       // Endpoint for signed URL generation (default: '/upload/signed-url')
   presignHeaders?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>); // Optional headers for presign requests
   onUploadComplete?: (files: FileUpload[]) => void;
   onUploadError?: (errors: Array<{ file: File; error: any }>) => void;
@@ -375,7 +375,7 @@ The package expects a server endpoint that returns presigned URLs for S3 uploads
 
 ```php
 // routes/api.php
-Route::post('/signed-storage-url', function (Request $request) {
+Route::post('/upload/signed-url', function (Request $request) {
     $validated = $request->validate([
         'files' => 'required|array',
         'files.*.filename' => 'required|string',
@@ -421,7 +421,7 @@ Route::post('/signed-storage-url', function (Request $request) {
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-app.post('/api/signed-storage-url', async (req, res) => {
+app.post('/upload/signed-url', async (req, res) => {
   const { files } = req.body;
   
   const responses = await Promise.all(files.map(async (file) => {

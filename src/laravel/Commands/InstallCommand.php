@@ -217,7 +217,7 @@ Route::post('/presign', App\\Http\\Controllers\\PresignController::class)
         
         $this->comment('4. Usage in your React components:');
         $this->line('   <UploadInertia');
-        $this->line('     presignEndpoint="/presign"');
+        $this->line('     signedUrlEndpoint="/upload/signed-url"');
         $this->line('     maxFiles={5}');
         $this->line('     maxSize={10 * 1024 * 1024} // 10MB');
         $this->line('   />');

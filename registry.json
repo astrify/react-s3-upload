@@ -27,7 +27,7 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "form"],
-			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Dropzone } from '@/components/upload/dropzone';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      presignEndpoint: '/api/signed-storage-url',\n      maxFiles: 5,\n      maxSize: 10 * 1024 * 1024, // 10MB\n      accept: 'image/*,application/pdf'\n    }}>\n      <Dropzone />\n    </FileUploadProvider>\n  );\n}\n```"
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Dropzone } from '@/components/upload/dropzone';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      signedUrlEndpoint: '/upload/signed-url',\n      maxFiles: 5,\n      maxSize: 10 * 1024 * 1024, // 10MB\n      accept: 'image/*,application/pdf'\n    }}>\n      <Dropzone />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
 			"name": "errors",
@@ -47,7 +47,7 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "feedback"],
-			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Errors } from '@/components/upload/errors';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{ presignEndpoint: '/api/signed-storage-url' }}>\n      <Errors />\n    </FileUploadProvider>\n  );\n}\n```"
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Errors } from '@/components/upload/errors';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{ signedUrlEndpoint: '/upload/signed-url' }}>\n      <Errors />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
 			"name": "header",
@@ -67,7 +67,7 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "navigation"],
-			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Header } from '@/components/upload/header';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      presignEndpoint: '/api/signed-storage-url',\n      maxFiles: 10\n    }}>\n      <Header title=\"Upload Documents\" />\n    </FileUploadProvider>\n  );\n}\n```"
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { Header } from '@/components/upload/header';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      signedUrlEndpoint: '/upload/signed-url',\n      maxFiles: 10\n    }}>\n      <Header title=\"Upload Documents\" />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
 			"name": "list",
@@ -87,7 +87,7 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "display"],
-			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { List } from '@/components/upload/list';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      presignEndpoint: '/api/signed-storage-url',\n      maxFiles: 12,\n      accept: 'image/*'\n    }}>\n      <List showImagePreviews />\n    </FileUploadProvider>\n  );\n}\n```"
+			"docs": "**Usage:**\n\n```tsx\nimport { FileUploadProvider } from '@astrify/react-s3-upload';\nimport { List } from '@/components/upload/list';\n\nfunction UploadComponent() {\n  return (\n    <FileUploadProvider config={{\n      signedUrlEndpoint: '/upload/signed-url',\n      maxFiles: 12,\n      accept: 'image/*'\n    }}>\n      <List showImagePreviews />\n    </FileUploadProvider>\n  );\n}\n```"
 		},
 		{
 			"name": "upload",
@@ -125,7 +125,7 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "complete-system"],
-			"docs": "A complete file upload component that includes dropzone, file list, progress tracking, and error handling all in one ready-to-use block.\n\n**Usage:**\n\n```tsx\nimport { Upload } from '@/components/upload/upload';\n\nfunction App() {\n  return (\n    <Upload \n      config={{\n        presignEndpoint: '/api/signed-storage-url',\n        maxFiles: 5,\n        maxSize: 10 * 1024 * 1024, // 10MB\n        accept: 'image/*'\n      }}\n    />\n  );\n}\n```"
+			"docs": "A complete file upload component that includes dropzone, file list, progress tracking, and error handling all in one ready-to-use block.\n\n**Usage:**\n\n```tsx\nimport { Upload } from '@/components/upload/upload';\n\nfunction App() {\n  return (\n    <Upload \n      config={{\n        signedUrlEndpoint: '/upload/signed-url',\n        maxFiles: 5,\n        maxSize: 10 * 1024 * 1024, // 10MB\n        accept: 'image/*'\n      }}\n    />\n  );\n}\n```"
 		},
 		{
 			"name": "upload-inertia",
@@ -173,7 +173,7 @@
 			},
 			"cssVars": {},
 			"categories": ["upload", "example", "inertia"],
-			"docs": "Complete file upload module for Inertia.js with Laravel integration.\n\n--------------------------------------------------------------------------\n Installation:\n--------------------------------------------------------------------------\n\n1. Install the React components and command via shadcn:\n   npx shadcn@latest add [REGISTRY_URL]/r/upload-inertia.json\n\n2. Run the setup command to install dependencies and controllers:\n   php artisan react-s3-upload:install\n\nThe install command will:\n• Install required Composer dependencies (league/flysystem-aws-s3-v3)\n• Copy Laravel controllers from node_modules to your app\n• Add routes to routes/web.php\n• Provide setup instructions\n\nNote: The install command is automatically available after step 1 (Laravel auto-discovers commands in app/Console/Commands)\n\n--------------------------------------------------------------------------\n Usage:\n--------------------------------------------------------------------------\n\nimport { UploadInertia } from '@/components/upload/upload-inertia';\n\n<UploadInertia \n  presignEndpoint=\"/presign\"\n  maxFiles={5}\n  maxSize={10 * 1024 * 1024} // 10MB\n/>\n\n--------------------------------------------------------------------------\n Manual Routes (if needed):\n--------------------------------------------------------------------------\n\nRoute::post('/documents', App\\Http\\Controllers\\DocumentCreateController::class)\n    ->middleware(['auth'])\n    ->name('documents.create');\n\nRoute::post('/presign', App\\Http\\Controllers\\PresignController::class)\n    ->middleware(['auth'])\n    ->name('documents.presign');"
+			"docs": "Complete file upload module for Inertia.js with Laravel integration.\n\n--------------------------------------------------------------------------\n Installation:\n--------------------------------------------------------------------------\n\n1. Install the React components and command via shadcn:\n   npx shadcn@latest add [REGISTRY_URL]/r/upload-inertia.json\n\n2. Run the setup command to install dependencies and controllers:\n   php artisan react-s3-upload:install\n\nThe install command will:\n• Install required Composer dependencies (league/flysystem-aws-s3-v3)\n• Copy Laravel controllers from node_modules to your app\n• Add routes to routes/web.php\n• Provide setup instructions\n\nNote: The install command is automatically available after step 1 (Laravel auto-discovers commands in app/Console/Commands)\n\n--------------------------------------------------------------------------\n Usage:\n--------------------------------------------------------------------------\n\nimport { UploadInertia } from '@/components/upload/upload-inertia';\n\n<UploadInertia \n  signedUrlEndpoint=\"/upload/signed-url\"\n  maxFiles={5}\n  maxSize={10 * 1024 * 1024} // 10MB\n/>\n\n--------------------------------------------------------------------------\n Manual Routes (if needed):\n--------------------------------------------------------------------------\n\nRoute::post('/documents', App\\Http\\Controllers\\DocumentCreateController::class)\n    ->middleware(['auth'])\n    ->name('documents.create');\n\nRoute::post('/upload/signed-url', App\\Http\\Controllers\\SignedUrlController::class)\n    ->middleware(['auth'])\n    ->name('upload.signed-url');"
 		}
 	]
 }

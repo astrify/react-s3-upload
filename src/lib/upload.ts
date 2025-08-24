@@ -199,12 +199,12 @@ async function handleErrorResponse(
  */
 export async function requestBatchSignedUrls(
 	files: Array<{ file: File; sha256: string }>,
-	presignEndpoint?: string,
-	presignHeaders?:
+	signedUrlEndpoint?: string,
+	signedUrlHeaders?:
 		| Record<string, string>
 		| (() => Record<string, string> | Promise<Record<string, string>>),
 ): Promise<SignedUrlResponse[]> {
-	const endpoint = presignEndpoint || "/signed-storage-url";
+	const endpoint = signedUrlEndpoint || "/upload/signed-url";
 
 	const requestData = {
 		files: files.map(({ file, sha256 }) => ({
@@ -215,7 +215,7 @@ export async function requestBatchSignedUrls(
 		})),
 	};
 
-	const headers = await buildRequestHeaders(presignHeaders);
+	const headers = await buildRequestHeaders(signedUrlHeaders);
 
 	try {
 		const response = await fetch(endpoint, {

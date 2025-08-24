@@ -23,7 +23,7 @@ function FileUploadSystem() {
 				config={{
 					maxFiles: 10,
 					maxSize: 50 * 1024 * 1024, // 50MB
-					presignEndpoint: "/api/signed-url",
+					signedUrlEndpoint: "/upload/signed-url",
 				}}
 			>
 				<div className="space-y-4">

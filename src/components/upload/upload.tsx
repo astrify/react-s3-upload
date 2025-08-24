@@ -11,7 +11,7 @@ interface UploadProps {
 
 export function Upload({
 	config = {
-		presignEndpoint: "/api/signed-storage-url",
+		signedUrlEndpoint: "/upload/signed-url",
 		maxFiles: 10,
 		maxSize: 10 * 1024 * 1024, // 10MB
 		accept: {

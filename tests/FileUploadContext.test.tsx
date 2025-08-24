@@ -89,7 +89,7 @@ describe("FileUploadContext", () => {
 				maxFiles: 5,
 				maxSize: 10 * 1024 * 1024,
 				accept: { "image/*": [] },
-				presignEndpoint: "/custom-url",
+				signedUrlEndpoint: "/custom-url",
 			};
 
 			const { result } = renderHook(() => useFileUpload(), {

@@ -224,7 +224,7 @@ describe("upload.ts", () => {
 
 			const result = await requestBatchSignedUrls(files);
 
-			expect(global.fetch).toHaveBeenCalledWith("/signed-storage-url", {
+			expect(global.fetch).toHaveBeenCalledWith("/upload/signed-url", {
 				method: "POST",
 				headers: expect.any(Headers),
 				body: JSON.stringify({

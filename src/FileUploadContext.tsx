@@ -25,8 +25,8 @@ export interface FileUploadConfig {
 	maxFiles?: number;
 	maxSize?: number;
 	accept?: Accept;
-	presignEndpoint?: string;
-	presignHeaders?:
+	signedUrlEndpoint?: string;
+	signedUrlHeaders?:
 		| Record<string, string>
 		| (() => Record<string, string> | Promise<Record<string, string>>);
 	onUploadComplete?: (files: FileUpload[]) => void;
@@ -86,8 +86,8 @@ export function FileUploadProvider({
 			maxFiles: config.maxFiles ?? 10,
 			maxSize: config.maxSize ?? 50 * 1024 * 1024, // 50MB default
 			accept: config.accept,
-			presignEndpoint: config.presignEndpoint ?? "/signed-storage-url",
-			presignHeaders: config.presignHeaders,
+			signedUrlEndpoint: config.signedUrlEndpoint ?? "/upload/signed-url",
+			signedUrlHeaders: config.signedUrlHeaders,
 			onUploadComplete: config.onUploadComplete,
 			onUploadError: config.onUploadError,
 			onFilesChange: config.onFilesChange,
@@ -96,8 +96,8 @@ export function FileUploadProvider({
 			config.maxFiles,
 			config.maxSize,
 			config.accept,
-			config.presignEndpoint,
-			config.presignHeaders,
+			config.signedUrlEndpoint,
+			config.signedUrlHeaders,
 			config.onUploadComplete,
 			config.onUploadError,
 			config.onFilesChange,
@@ -189,8 +189,8 @@ export function FileUploadProvider({
 						file: fileRefs.current.get(req.sha256) || new File([], req.name),
 						sha256: req.sha256,
 					})),
-					mergedConfig.presignEndpoint,
-					mergedConfig.presignHeaders,
+					mergedConfig.signedUrlEndpoint,
+					mergedConfig.signedUrlHeaders,
 				);
 
 				// Map signed URLs to file requests
@@ -238,8 +238,8 @@ export function FileUploadProvider({
 			return { success, errors: errorMessages };
 		},
 		[
-			mergedConfig.presignEndpoint,
-			mergedConfig.presignHeaders,
+			mergedConfig.signedUrlEndpoint,
+			mergedConfig.signedUrlHeaders,
 			fileUploads,
 			updateFileUpload,
 		],

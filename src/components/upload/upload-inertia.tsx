@@ -25,9 +25,9 @@ type UploadForm = {
 
 interface UploadInertiaProps {
 	/**
-	 * The endpoint URL for signed storage URLs (e.g., '/signed-storage-url')
+	 * The endpoint URL for signed storage URLs (e.g., '/upload/signed-url')
 	 */
-	presignEndpoint?: string;
+	signedUrlEndpoint?: string;
 	/**
 	 * The form submission endpoint URL (e.g., '/documents')
 	 */
@@ -143,7 +143,7 @@ function FormContent({
 }
 
 export function UploadInertia({
-	presignEndpoint = "/signed-storage-url",
+	signedUrlEndpoint = "/upload/signed-url",
 	submitEndpoint = "/documents",
 	maxFiles = 10,
 	maxSize = 10 * 1024 * 1024, // 10MB
@@ -153,7 +153,7 @@ export function UploadInertia({
 		<div className={className}>
 			<FileUploadProvider
 				config={{
-					presignEndpoint,
+					signedUrlEndpoint,
 					maxFiles,
 					maxSize,
 					accept: {

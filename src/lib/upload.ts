@@ -195,7 +195,7 @@ async function handleErrorResponse(
 }
 
 /**
- * Request signed URLs for multiple files from Laravel in a single batch request
+ * Request signed URLs for multiple files in a single request
  */
 export async function requestBatchSignedUrls(
 	files: Array<{ file: File; sha256: string }>,

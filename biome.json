@@ -1,28 +1,27 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
 	"files": {
-		"ignore": [
-			"**/stories/**",
-			"**/dist/**",
-			"**/storybook-static/**",
-			"**/.storybook/**",
-			"**/coverage/**",
-			"**/.next/**",
-			"**/node_modules/**",
-			"**/ui/**",
-			"**/tests/**",
-			"**/docs/**"
+		"includes": [
+			"**",
+			"!**/stories",
+			"!**/dist",
+			"!**/storybook-static",
+			"!**/.storybook",
+			"!**/coverage",
+			"!**/.next",
+			"!**/node_modules",
+			"!**/ui",
+			"!**/tests",
+			"!**/docs"
 		]
 	},
-	"organizeImports": {
-		"enabled": true
-	},
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"css": {
 		"formatter": {
 			"enabled": true
 		},
 		"linter": {
-			"enabled": true
+			"enabled": false
 		}
 	},
 
@@ -39,7 +38,7 @@
 					}
 				}
 			},
-			"all": true,
+			"recommended": true,
 			"style": {
 				"noDefaultExport": "off",
 				"useFilenamingConvention": "off",
@@ -57,10 +56,6 @@
 			"suspicious": {
 				"noReactSpecificProps": "off",
 				"noConsole": {
-					"fix": "none",
-					"level": "warn"
-				},
-				"noConsoleLog": {
 					"fix": "none",
 					"level": "warn"
 				}

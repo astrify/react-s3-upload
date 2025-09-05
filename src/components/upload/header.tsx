@@ -1,10 +1,10 @@
-import { useFileUpload } from "@/FileUploadContext";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { CloudUpload, Trash2 } from "lucide-react";
 import type React from "react";
 import { useRef } from "react";
 import type { Accept } from "react-dropzone";
+import { Button } from "@/components/ui/button";
+import { useFileUpload } from "@/FileUploadContext";
+import { cn } from "@/lib/utils";
 
 // Convert Accept object to HTML input accept string
 function acceptToString(accept: Accept | undefined): string | undefined {

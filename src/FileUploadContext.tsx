@@ -1,3 +1,13 @@
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import * as defaultUploadLib from "@/lib/upload";
 import type {
 	FileUpload,
@@ -8,16 +18,6 @@ import type {
 	UploadStatus,
 	UseFileUploadResult,
 } from "@/types/file-upload";
-import {
-	type ReactNode,
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
 
 const FileUploadContext = createContext<UseFileUploadResult | undefined>(
 	undefined,
@@ -255,7 +255,9 @@ export function FileUploadProvider({
 	// Remove all files
 	const removeAll = useCallback(() => {
 		// Cancel all uploads
-		abortControllersRef.current.forEach((controller) => controller.abort());
+		for (const controller of Array.from(abortControllersRef.current.values())) {
+			controller.abort();
+		}
 		abortControllersRef.current.clear();
 		setActiveUploads(new Set());
 

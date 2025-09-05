@@ -120,11 +120,11 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      # - name: Build and publish to npm
-      #   if: github.ref == 'refs/tags/v*' # Only run on version tags
-      #   run: |
-      #     pnpm build
-      #     npm login --registry=https://registry.npmjs.org/ --scope=your-scope
-      #     npm publish
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.YOUR_NPM_AUTH_TOKEN }}
+      - name: Build and publish to npm
+        if: github.ref == 'refs/tags/v*' # Only run on version tags
+        run: |
+          pnpm build
+          npm login --registry=https://registry.npmjs.org/ --scope=your-scope
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

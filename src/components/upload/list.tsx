@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { formatBytes, useFileUpload } from "@astrify/react-s3-upload";
 import type { FileType, FileUpload } from "@astrify/react-s3-upload";
+import { formatBytes, useFileUpload } from "@astrify/react-s3-upload";
 import {
 	FileArchiveIcon,
 	FileIcon,
@@ -14,11 +12,16 @@ import {
 	XIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 function FilePreviewWithProgress({
 	file,
 	showPreview,
-}: { file: FileUpload; showPreview: boolean }) {
+}: {
+	file: FileUpload;
+	showPreview: boolean;
+}) {
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
 	useEffect(() => {

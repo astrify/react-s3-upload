@@ -1,8 +1,8 @@
+import type { FileUploadConfig } from "@astrify/react-s3-upload";
+import { FileUploadProvider } from "@astrify/react-s3-upload";
 import { Dropzone } from "@/components/upload/dropzone";
 import { Errors } from "@/components/upload/errors";
 import { List } from "@/components/upload/list";
-import { FileUploadProvider } from "@astrify/react-s3-upload";
-import type { FileUploadConfig } from "@astrify/react-s3-upload";
 
 interface UploadProps {
 	config?: Partial<FileUploadConfig>;

@@ -2,7 +2,7 @@ import childProcess from "node:child_process";
 import fs from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { type Options, defineConfig } from "tsup";
+import { defineConfig, type Options } from "tsup";
 
 const common: Options = {
 	entry: ["src/index.ts"],
@@ -49,7 +49,7 @@ const linkSelf = async () => {
 	await new Promise((resolve) => {
 		childProcess.exec("pnpm link:self", (error, _stdout, _stderr) => {
 			if (error) {
-				// biome-ignore lint/suspicious/noConsole: <explanation>
+				// biome-ignore lint/suspicious/noConsole: needed for build process logging
 				console.error(`exec error: ${error}`);
 				return;
 			}
@@ -58,8 +58,7 @@ const linkSelf = async () => {
 		});
 	});
 
-	// biome-ignore lint/suspicious/noConsoleLog: <explanation>
-	// biome-ignore lint/suspicious/noConsole: <explanation>
+	// biome-ignore lint/suspicious/noConsole: needed for build process logging
 	console.log(
 		`Run 'pnpm link ${await getPackageName()} --global' inside another project to consume this package.`,
 	);

@@ -35,6 +35,7 @@ yarn-error.log*
 storybook-static
 CLAUDE.md
 ARCHITECTURE.md
+docs
 
 # Registry build output
 /public/r

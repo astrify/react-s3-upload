@@ -1,7 +1,7 @@
 {
 	"name": "@astrify/react-s3-upload",
 	"description": "React file upload system built for S3-compatible storage with shadcn/ui components",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"author": "Ben Bjurstrom <benbjurstrom@users.noreply.github.com>",
 	"license": "MIT",
 	"keywords": [

@@ -121,7 +121,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
       - name: Build and publish to npm
-        if: github.ref == 'refs/tags/v*' # Only run on version tags
+        if: github.ref == 'refs/tags/*' # Only run on version tags
         run: |
           pnpm build
           npm login --registry=https://registry.npmjs.org/ --scope=your-scope

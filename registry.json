@@ -124,6 +124,10 @@
 					"type": "registry:component"
 				},
 				{
+					"path": "src/components/upload/header.tsx",
+					"type": "registry:component"
+				},
+				{
 					"path": "src/components/upload/errors.tsx",
 					"type": "registry:component"
 				}

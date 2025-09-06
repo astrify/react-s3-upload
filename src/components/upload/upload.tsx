@@ -2,6 +2,7 @@ import type { FileUploadConfig } from "@astrify/react-s3-upload";
 import { FileUploadProvider } from "@astrify/react-s3-upload";
 import { Dropzone } from "@/components/upload/dropzone";
 import { Errors } from "@/components/upload/errors";
+import { Header } from "@/components/upload/header";
 import { List } from "@/components/upload/list";
 
 interface UploadProps {
@@ -25,6 +26,7 @@ export function Upload({
 		<FileUploadProvider config={config}>
 			<div className={`space-y-4 ${className || ""}`}>
 				<Dropzone />
+				<Header />
 				<List />
 				<Errors />
 			</div>

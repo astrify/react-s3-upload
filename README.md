@@ -195,179 +195,42 @@ function FormContent() {
 }
 ```
 
-## Usage Examples
-
-### Basic File Upload
-
-```tsx
-import { FileUploadProvider } from '@astrify/react-s3-upload';
-import { Dropzone } from '@/components/upload/dropzone';
-import { List } from '@/components/upload/list';
-
-function BasicUpload() {
-  return (
-    <FileUploadProvider config={{
-      signedUrlEndpoint: '/upload/signed-url',
-      maxFiles: 5
-    }}>
-      <Dropzone />
-      <List />
-    </FileUploadProvider>
-  );
-}
-```
-
-### Image Upload with List View
-
-```tsx
-import { FileUploadProvider } from '@astrify/react-s3-upload';
-import { Dropzone } from '@/components/upload/dropzone';
-import { List } from '@/components/upload/list';
-
-function ImageUpload() {
-  return (
-    <FileUploadProvider config={{
-      signedUrlEndpoint: '/upload/signed-url',
-      maxFiles: 12,
-      accept: 'image/*'
-    }}>
-      <Dropzone />
-      <List showImagePreviews />
-    </FileUploadProvider>
-  );
-}
-```
-
-### With Custom Headers
-
-```tsx
-import { FileUploadProvider } from '@astrify/react-s3-upload';
-
-function SecureUpload() {
-  return (
-    <FileUploadProvider config={{
-      signedUrlEndpoint: '/upload/signed-url',
-      // Static headers
-      presignHeaders: {
-        'X-API-Key': 'your-api-key'
-      },
-      // Or dynamic headers (async function)
-      presignHeaders: async () => {
-        const token = await getAuthToken();
-        return {
-          'Authorization': `Bearer ${token}`,
-          'X-Request-ID': generateRequestId()
-        };
-      }
-    }}>
-      <Dropzone />
-      <List />
-    </FileUploadProvider>
-  );
-}
-```
-
-### Using the Hook API
-
-```tsx
-import { useFileUpload } from '@astrify/react-s3-upload';
-
-function CustomUploadButton() {
-  const { addFiles, files, isUploading } = useFileUpload();
-  const inputRef = useRef<HTMLInputElement>(null);
-  
-  const handleClick = () => {
-    inputRef.current?.click();
-  };
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    addFiles(files);
-  };
-  
-  return (
-    <>
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        onChange={handleChange}
-        className="hidden"
-      />
-      <button onClick={handleClick} disabled={isUploading}>
-        Upload Files ({files.length})
-      </button>
-    </>
-  );
-}
-```
-
-## API Reference
-
-### FileUploadProvider
-
-The main context provider that manages upload state and logic.
-
-```tsx
-interface FileUploadConfig {
-  maxFiles?: number;              // Maximum number of files (default: 10)
-  maxSize?: number;               // Maximum file size in bytes (default: 50MB)
-  accept?: string;                // Accepted file types (default: '*')
-  multiple?: boolean;             // Allow multiple file selection (default: true)
-  signedUrlEndpoint?: string;       // Endpoint for signed URL generation (default: '/upload/signed-url')
-  presignHeaders?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>); // Optional headers for presign requests
-  onUploadComplete?: (files: FileUpload[]) => void;
-  onUploadError?: (errors: Array<{ file: File; error: any }>) => void;
-  onFilesChange?: (files: File[]) => void;
-}
-```
-
-### useFileUpload Hook
-
-Access the upload context and all functionality.
-
-```tsx
-const {
-  // State
-  files,           // Current file collection
-  errors,          // Error messages
-  isUploading,     // Upload in progress
-  remainingSlots,  // Available upload slots
-  
-  // Actions
-  addFiles,        // Add files to upload
-  removeFile,      // Remove a specific file
-  removeAll,       // Clear all files
-  retryUpload,     // Retry failed upload
-  reset,           // Reset to initial state
-  
-  // Utilities
-  canAcceptMore,   // Can accept more files
-  acceptedFileTypes,
-  maxFileSize
-} = useFileUpload();
-```
-
-### Types
-
-```tsx
-interface FileUpload {
-  id: string;              // SHA-256 hash
-  name: string;            // File name
-  size: number;            // File size in bytes
-  type: string;            // MIME type
-  sha256: string;          // SHA-256 hash
-  url: string;             // Presigned upload URL
-  status: UploadStatus;    // Upload status
-  progress: number;        // Upload progress (0-100)
-  error?: string;          // Error message if failed
-  preview?: string;        // Preview URL for images
-}
-
-type UploadStatus = 'pending' | 'uploading' | 'complete' | 'error';
-```
-
 ## Server Integration
+
+### Request & Response Payloads
+
+The uploader issues a `POST` to your presign endpoint (default `/upload/signed-url`) with JSON shaped like:
+
+```json
+{
+  "files": [
+    {
+      "filename": "invoice.pdf",
+      "filesize": 58211,
+      "contentType": "application/pdf",
+      "sha256": "3f0d2f8c8d0d2b36f9b8c5c2f5deda4d3b1c7a6d1e9f5e8c6a7b8c9d0e1f2a3"
+    }
+  ]
+}
+```
+
+Reply with a `200` JSON body describing each generated upload target. At minimum, return the matching `sha256` plus the presigned URL details:
+
+```json
+{
+  "files": [
+    {
+      "sha256": "3f0d2f8c8d0d2b36f9b8c5c2f5deda4d3b1c7a6d1e9f5e8c6a7b8c9d0e1f2a3",
+      "bucket": "my-uploads",
+      "key": "uploads/9d1fcdcb-0f1f-4c82-bfd5-e8a4c5d9e123.pdf",
+      "url": "https://my-uploads.s3.amazonaws.com/uploads/9d1fcdc...",
+      "filename": "invoice.pdf"
+    }
+  ]
+}
+```
+
+For validation failures return `422 Unprocessable Entity` with an `errors` object (for example `{"errors": {"files.0.filesize": ["File too large"]}}`); the uploader surfaces those messages to the user.
 
 ### Laravel Example
 
@@ -450,51 +313,71 @@ app.post('/upload/signed-url', async (req, res) => {
 });
 ```
 
-## shadcn Registry Components
 
-The following components are available through the shadcn registry:
+## API Reference
 
-### dropzone
-Drag-and-drop file selector with visual feedback.
+### FileUploadProvider
 
-### list
-List view displaying files with progress bars, status, and actions.
+The main context provider that manages upload state and logic.
 
-### errors
-Error message display via toast notifications.
+```tsx
+interface FileUploadConfig {
+  maxFiles?: number;              // Maximum number of files (default: 10)
+  maxSize?: number;               // Maximum file size in bytes (default: 50MB)
+  accept?: string;                // Accepted file types (default: '*')
+  multiple?: boolean;             // Allow multiple file selection (default: true)
+  signedUrlEndpoint?: string;       // Endpoint for signed URL generation (default: '/upload/signed-url')
+  presignHeaders?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>); // Optional headers for presign requests
+  onUploadComplete?: (files: FileUpload[]) => void;
+  onUploadError?: (errors: Array<{ file: File; error: any }>) => void;
+  onFilesChange?: (files: File[]) => void;
+}
+```
 
-### header
-Header component showing file count and bulk actions.
+### useFileUpload Hook
 
-### upload
-Complete file upload component bundling all components in one ready-to-use block.
+Access the upload context and all functionality.
 
-## Features in Detail
+```tsx
+const {
+  // State
+  files,           // Current file collection
+  errors,          // Error messages
+  isUploading,     // Upload in progress
+  remainingSlots,  // Available upload slots
+  
+  // Actions
+  addFiles,        // Add files to upload
+  removeFile,      // Remove a specific file
+  removeAll,       // Clear all files
+  retryUpload,     // Retry failed upload
+  reset,           // Reset to initial state
+  
+  // Utilities
+  canAcceptMore,   // Can accept more files
+  acceptedFileTypes,
+  maxFileSize
+} = useFileUpload();
+```
 
-### Duplicate Detection
-Files are hashed using SHA-256 on the client side before upload. The hash is sent to the server for deduplication checking, preventing duplicate uploads and saving bandwidth.
+### Types
 
-### Concurrent Upload Management
-The system automatically manages upload concurrency, limiting to 3 simultaneous uploads by default to prevent overwhelming the server while maintaining good performance.
+```tsx
+interface FileUpload {
+  id: string;              // SHA-256 hash
+  name: string;            // File name
+  size: number;            // File size in bytes
+  type: string;            // MIME type
+  sha256: string;          // SHA-256 hash
+  url: string;             // Presigned upload URL
+  status: UploadStatus;    // Upload status
+  progress: number;        // Upload progress (0-100)
+  error?: string;          // Error message if failed
+  preview?: string;        // Preview URL for images
+}
 
-### Progress Tracking
-Each file's upload progress is tracked individually using XMLHttpRequest, providing real-time feedback to users.
-
-### Error Recovery
-Failed uploads can be retried with a single click. The system will request a fresh signed URL and attempt the upload again.
-
-### Memory Management
-- Blob URLs are automatically cleaned up when files are removed
-- Abort controllers cancel in-flight uploads when needed
-- Preview URLs are revoked to prevent memory leaks
-
-## Browser Support
-
-This package supports all modern browsers that implement:
-- File API
-- Crypto.subtle (for SHA-256 hashing)
-- XMLHttpRequest Level 2 (for progress events)
-- ES2015+ JavaScript features
+type UploadStatus = 'pending' | 'uploading' | 'complete' | 'error';
+```
 
 ## Contributing
 
@@ -512,52 +395,6 @@ pnpm install
 
 # Start development mode
 pnpm dev
-```
-
-### Available Scripts
-
-#### Development
-- `pnpm dev` - Run concurrent development mode (builds, Storybook, and tests)
-- `pnpm build` - Build package with tsup for production
-- `pnpm build --watch` - Build package in watch mode
-
-#### Testing
-- `pnpm test` - Run all tests in watch mode with Vitest
-- `pnpm test:ci` - Run tests once with coverage reporting
-- `pnpm vitest run` - Run tests once without watch
-
-#### Storybook
-- `pnpm storybook` - Start Storybook dev server on port 6006
-- `pnpm storybook:build` - Build static Storybook
-
-#### Code Quality
-- `pnpm lint` - Format and fix code with Biome
-- `pnpm lint:ci` - Check code without fixing (for CI)
-- `pnpm commit` - Create formatted commit with commitizen
-
-#### Publishing
-- `pnpm release` - Build and create a release with release-it
-- `pnpm link:self` - Link package globally for local development
-
-#### Registry
-- `pnpm registry:build` - Build the shadcn registry JSON files
-
-### Project Structure
-
-```
-src/
-├── FileUploadContext.tsx    # Context provider with upload logic
-├── components/              # UI components
-│   └── upload/              # Upload-related components
-│       ├── dropzone.tsx     # Drag-and-drop file selector
-│       ├── list.tsx         # List view with progress tracking
-│       ├── errors.tsx       # Error display component
-│       └── header.tsx       # Header with file count and actions
-├── lib/
-│   └── upload.ts           # Upload utilities and S3 integration
-├── types/
-│   └── file-upload.ts      # TypeScript type definitions
-└── index.ts                # Package exports
 ```
 
 ### Development Tools

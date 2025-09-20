@@ -28,6 +28,8 @@ export type {
 	SignedUrlRequest,
 	SignedUrlResponse,
 	UploadError,
+	UploadErrorType,
+	UploadLib,
 	UploadStatus,
 	UseFileUploadResult,
 } from "./types/file-upload";

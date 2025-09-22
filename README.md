@@ -55,7 +55,7 @@ npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/upload.json
 ### 2. Use the complete Upload component
 
 ```tsx
-import { Upload } from '@/components/upload/upload';
+import { Upload } from '@/components/astrify/upload/upload';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -79,9 +79,9 @@ function App() {
 
 ```tsx
 import { FileUploadProvider } from '@astrify/react-s3-upload';
-import { Dropzone } from '@/components/upload/dropzone';
-import { List } from '@/components/upload/list';
-import { Errors } from '@/components/upload/errors';
+import { Dropzone } from '@/components/astrify/upload/dropzone';
+import { List } from '@/components/astrify/upload/list';
+import { Errors } from '@/components/astrify/upload/errors';
 
 function UploadSection() {
   return (
@@ -108,9 +108,9 @@ function UploadSection() {
 ```tsx
 import { useState } from 'react';
 import { FileUploadProvider, useFileUpload } from '@astrify/react-s3-upload';
-import { Dropzone } from '@/components/upload/dropzone';
-import { List } from '@/components/upload/list';
-import { Errors } from '@/components/upload/errors';
+import { Dropzone } from '@/components/astrify/upload/dropzone';
+import { List } from '@/components/astrify/upload/list';
+import { Errors } from '@/components/astrify/upload/errors';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';

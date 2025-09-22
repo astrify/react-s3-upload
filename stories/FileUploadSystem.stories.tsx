@@ -1,19 +1,24 @@
-import { FileUploadProvider, useFileUpload } from "@/FileUploadContext";
-import { Dropzone } from "@/components/upload/dropzone";
-import { Errors } from "@/components/upload/errors";
-import { Header } from "@/components/upload/header";
-import { List } from "@/components/upload/list";
-import {
-	createUploadSuccessFake,
-	createUploadFailureFake,
-	createUploadValidationErrorFake,
-} from "@/lib/upload-fakes";
 import type { Meta, StoryObj } from "@storybook/react";
 import { within } from "@storybook/test";
 import { Toaster } from "sonner";
+import { Dropzone } from "@/components/astrify/upload/dropzone";
+import { Errors } from "@/components/astrify/upload/errors";
+import { Header } from "@/components/astrify/upload/header";
+import { List } from "@/components/astrify/upload/list";
+import { FileUploadProvider } from "@/FileUploadContext";
+import {
+	createUploadFailureFake,
+	createUploadSuccessFake,
+	createUploadValidationErrorFake,
+} from "@/lib/upload-fakes";
+import type { UploadLib } from "@/types/file-upload";
 
 // Component that composes all file upload components
-function FileUploadSystem({ uploadLib = createUploadSuccessFake() }: { uploadLib?: any }) {
+function FileUploadSystem({
+	uploadLib = createUploadSuccessFake(),
+}: {
+	uploadLib?: UploadLib;
+}) {
 	return (
 		<>
 			<FileUploadProvider
@@ -35,7 +40,6 @@ function FileUploadSystem({ uploadLib = createUploadSuccessFake() }: { uploadLib
 		</>
 	);
 }
-
 
 const meta = {
 	title: "System/FileUploadSystem",
@@ -78,7 +82,11 @@ export const MultipleFileTypes: Story = {
 		const mockFiles = [
 			createMockFile("document.pdf", 1024 * 1024, "application/pdf"),
 			createMockFile("photo.jpg", 2 * 1024 * 1024, "image/jpeg"),
-			createMockFile("spreadsheet.xlsx", 512 * 1024, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+			createMockFile(
+				"spreadsheet.xlsx",
+				512 * 1024,
+				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+			),
 			createMockFile("video.mp4", 5 * 1024 * 1024, "video/mp4"),
 			createMockFile("archive.zip", 3 * 1024 * 1024, "application/zip"),
 		];
@@ -87,7 +95,9 @@ export const MultipleFileTypes: Story = {
 		if (!dropzone) throw new Error("Dropzone not found");
 
 		const dataTransfer = new DataTransfer();
-		mockFiles.forEach((file) => dataTransfer.items.add(file));
+		for (const file of mockFiles) {
+			dataTransfer.items.add(file);
+		}
 
 		const dropEvent = new DragEvent("drop", {
 			bubbles: true,
@@ -123,10 +133,10 @@ export const WithRetry: Story = {
 		});
 
 		dropzone.dispatchEvent(dropEvent);
-		
+
 		// Wait for error to occur
 		await new Promise((resolve) => setTimeout(resolve, 2000));
-		
+
 		// User can click retry button to retry the upload
 	},
 };
@@ -140,7 +150,11 @@ export const ValidationErrors: Story = {
 		const canvas = within(canvasElement);
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
-		const mockFile = createMockFile("too-large.zip", 15 * 1024 * 1024, "application/zip");
+		const mockFile = createMockFile(
+			"too-large.zip",
+			15 * 1024 * 1024,
+			"application/zip",
+		);
 
 		const dropzone = canvas.getByText(/Drop files here/i).closest("div");
 		if (!dropzone) throw new Error("Dropzone not found");
@@ -155,7 +169,7 @@ export const ValidationErrors: Story = {
 		});
 
 		dropzone.dispatchEvent(dropEvent);
-		
+
 		// Wait for validation error to appear
 		await new Promise((resolve) => setTimeout(resolve, 1000));
 	},

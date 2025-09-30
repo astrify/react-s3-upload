@@ -37,36 +37,53 @@ function FilePreviewWithProgress({
 		}
 	}, [file, showPreview]);
 
-	// For images with preview enabled, use progressive reveal effect
+	// For images with preview enabled, show with circular progress indicator
 	if (showPreview && previewUrl && file.type.startsWith("image/")) {
 		if (file.status === "pending" || file.status === "uploading") {
 			const progress = file.status === "pending" ? 0 : file.progress || 0;
 			return (
 				<div className="relative size-10 overflow-hidden rounded">
-					{/* Dimmed base image */}
+					{/* Dimmed preview image */}
 					<img
 						src={previewUrl}
 						alt={file.name}
-						className="absolute inset-0 size-10 object-cover opacity-30"
+						className="size-10 object-cover opacity-40"
 					/>
-					{/* Progressive reveal overlay */}
-					<div
-						className="absolute inset-0 overflow-hidden"
-						style={{ width: `${progress}%` }}
+					{/* Circular progress indicator */}
+					<svg
+						className="-rotate-90 absolute inset-0 size-10"
+						viewBox="0 0 40 40"
+						aria-label={
+							file.status === "pending" ? "Pending upload" : "Upload progress"
+						}
 					>
-						<img
-							src={previewUrl}
-							alt={file.name}
-							className="size-10 object-cover"
+						<title>
+							{file.status === "pending" ? "Pending upload" : "Upload progress"}
+						</title>
+						{/* Background circle */}
+						<circle
+							cx="20"
+							cy="20"
+							r="18"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							className="text-background/60"
 						/>
-					</div>
-					{/* Optional: Add a subtle progress line */}
-					{file.status === "uploading" && progress > 0 && progress < 100 && (
-						<div
-							className="absolute inset-y-0 w-0.5 bg-primary/50"
-							style={{ left: `${progress}%` }}
+						{/* Progress circle */}
+						<circle
+							cx="20"
+							cy="20"
+							r="18"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeDasharray={`${2 * Math.PI * 18}`}
+							strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
+							className="text-primary transition-all duration-300"
+							strokeLinecap="round"
 						/>
-					)}
+					</svg>
 				</div>
 			);
 		}

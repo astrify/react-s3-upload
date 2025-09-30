@@ -16,8 +16,10 @@ import type { UploadLib } from "@/types/file-upload";
 // Component that composes all file upload components
 function FileUploadSystem({
 	uploadLib = createUploadSuccessFake(),
+	showImagePreviews = false,
 }: {
 	uploadLib?: UploadLib;
+	showImagePreviews?: boolean;
 }) {
 	return (
 		<>
@@ -33,7 +35,7 @@ function FileUploadSystem({
 					<Dropzone />
 					<Errors />
 					<Header />
-					<List />
+					<List showImagePreviews={showImagePreviews} />
 				</div>
 			</FileUploadProvider>
 			<Toaster position="bottom-right" richColors />
@@ -67,6 +69,41 @@ const createMockFile = (
 ): File => {
 	const content = new Array(size).fill("a").join("");
 	return new File([content], name, { type });
+};
+
+// Helper to create mock image files with actual image data
+const createMockImageFile = async (
+	name: string,
+	width: number,
+	height: number,
+	type = "image/jpeg",
+): Promise<File> => {
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) throw new Error("Could not get canvas context");
+
+	// Create a colorful gradient background
+	const gradient = ctx.createLinearGradient(0, 0, width, height);
+	gradient.addColorStop(0, `hsl(${Math.random() * 360}, 70%, 60%)`);
+	gradient.addColorStop(1, `hsl(${Math.random() * 360}, 70%, 60%)`);
+	ctx.fillStyle = gradient;
+	ctx.fillRect(0, 0, width, height);
+
+	// Add some text
+	ctx.fillStyle = "white";
+	ctx.font = "bold 24px sans-serif";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText(name, width / 2, height / 2);
+
+	return new Promise((resolve) => {
+		canvas.toBlob((blob) => {
+			if (!blob) throw new Error("Could not create blob");
+			resolve(new File([blob], name, { type }));
+		}, type);
+	});
 };
 
 // Shows various file types being uploaded
@@ -172,5 +209,41 @@ export const ValidationErrors: Story = {
 
 		// Wait for validation error to appear
 		await new Promise((resolve) => setTimeout(resolve, 1000));
+	},
+};
+
+// Shows image uploads with preview thumbnails
+export const ImageUploadWithPreviews: Story = {
+	args: {
+		uploadLib: createUploadSuccessFake(),
+		showImagePreviews: true,
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		// Create multiple image files with actual image data
+		const imageFiles = await Promise.all([
+			createMockImageFile("vacation-photo.jpg", 800, 600, "image/jpeg"),
+			createMockImageFile("profile-pic.png", 400, 400, "image/png"),
+			createMockImageFile("screenshot.jpg", 1920, 1080, "image/jpeg"),
+			createMockImageFile("banner.jpg", 1200, 400, "image/jpeg"),
+		]);
+
+		const dropzone = canvas.getByText(/Drop files here/i).closest("div");
+		if (!dropzone) throw new Error("Dropzone not found");
+
+		const dataTransfer = new DataTransfer();
+		for (const file of imageFiles) {
+			dataTransfer.items.add(file);
+		}
+
+		const dropEvent = new DragEvent("drop", {
+			bubbles: true,
+			cancelable: true,
+			dataTransfer,
+		});
+
+		dropzone.dispatchEvent(dropEvent);
 	},
 };

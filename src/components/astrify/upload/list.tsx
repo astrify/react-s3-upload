@@ -23,22 +23,57 @@ function FilePreviewWithProgress({
 	showPreview: boolean;
 }) {
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+	const [previewFailed, setPreviewFailed] = useState(false);
 
 	useEffect(() => {
 		// Create preview URL if it's an image and we have the file or a preview URL
 		if (showPreview && file.type.startsWith("image/")) {
 			if (file.preview) {
-				setPreviewUrl(file.preview);
+				// For provided preview URLs, test if they work
+				const img = new Image();
+				const previewSrc = file.preview;
+				img.onload = () => {
+					setPreviewUrl(previewSrc);
+					setPreviewFailed(false);
+				};
+				img.onerror = () => {
+					setPreviewFailed(true);
+					setPreviewUrl(null);
+				};
+				img.src = previewSrc;
 			} else if (file.file instanceof File) {
 				const url = URL.createObjectURL(file.file);
-				setPreviewUrl(url);
-				return () => URL.revokeObjectURL(url);
+
+				// Test if the browser can actually render this image
+				const img = new Image();
+				img.onload = () => {
+					setPreviewUrl(url);
+					setPreviewFailed(false);
+				};
+				img.onerror = () => {
+					setPreviewFailed(true);
+					setPreviewUrl(null);
+					URL.revokeObjectURL(url);
+				};
+				img.src = url;
+
+				return () => {
+					if (previewUrl === url) {
+						URL.revokeObjectURL(url);
+					}
+				};
 			}
 		}
-	}, [file, showPreview]);
+	}, [file, showPreview, previewUrl]);
 
 	// For images with preview enabled, show with circular progress indicator
-	if (showPreview && previewUrl && file.type.startsWith("image/")) {
+	// Only show image preview if we have a valid preview URL and it didn't fail to load
+	if (
+		showPreview &&
+		previewUrl &&
+		!previewFailed &&
+		file.type.startsWith("image/")
+	) {
 		if (file.status === "pending" || file.status === "uploading") {
 			const progress = file.status === "pending" ? 0 : file.progress || 0;
 			return (

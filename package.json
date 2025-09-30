@@ -83,12 +83,14 @@
 		"@storybook/react": "^9.1.4",
 		"@storybook/react-vite": "^9.1.4",
 		"@storybook/test": "9.0.0-alpha.2",
+		"@tailwindcss/vite": "^4.1.13",
 		"@testing-library/jest-dom": "6.8.0",
 		"@testing-library/react": "16.3.0",
 		"@types/node": "22.13.11",
 		"@types/react": "18.3.13",
 		"@types/react-dom": "18.3.1",
 		"@types/react-test-renderer": "18.3.0",
+		"@vitejs/plugin-react": "^5.0.4",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.2.1",
 		"dotenv": "^17.2.2",
@@ -101,6 +103,7 @@
 		"release-it": "19.0.4",
 		"shadcn": "^3.2.1",
 		"storybook": "^9.1.4",
+		"tailwindcss": "^4.1.13",
 		"ts-node": "10.9.2",
 		"tsconfig-paths": "4.2.0",
 		"tsup": "8.5.0",
@@ -129,14 +132,11 @@
 		"@radix-ui/react-label": "^2.1.7",
 		"@radix-ui/react-slot": "^1.2.3",
 		"@radix-ui/react-tooltip": "^1.2.8",
-		"@tailwindcss/vite": "^4.1.13",
-		"@vitejs/plugin-react": "^5.0.2",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.542.0",
 		"react-dropzone": "^14.3.8",
 		"sonner": "^2.0.7",
-		"tailwind-merge": "^3.3.1",
-		"tailwindcss": "^4.1.13"
+		"tailwind-merge": "^3.3.1"
 	}
 }

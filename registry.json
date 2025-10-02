@@ -21,8 +21,7 @@
 			"files": [
 				{
 					"path": "src/components/astrify/upload.tsx",
-					"type": "registry:component",
-					"target": "components/astrify/upload.tsx"
+					"type": "registry:component"
 				}
 			],
 			"tailwind": {

@@ -2,10 +2,7 @@
 
 // Component exports (undocumented - for development use)
 // Note: Production users should install via shadcn CLI for better integration
-export { Dropzone } from "./components/astrify/upload/dropzone";
-export { Errors } from "./components/astrify/upload/errors";
-export { Header } from "./components/astrify/upload/header";
-export { List } from "./components/astrify/upload/list";
+export { Dropzone, Errors, Header, List } from "./components/astrify/upload";
 export {
 	FileUploadProvider,
 	type FileUploadProviderProps,

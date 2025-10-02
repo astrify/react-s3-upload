@@ -42,50 +42,18 @@ This package requires React 17 or higher:
 ### 1. Install UI components from shadcn registry
 
 ```bash
-# Install individual components
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/dropzone.json
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/list.json
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/errors.json
-npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/header.json
-
-# Or install the complete system
+# Install upload components
 npx shadcn@latest add https://astrify.github.io/react-s3-upload/r/upload.json
-```
 
-### 2. Use the complete Upload component
-
-```tsx
-import { Upload } from '@/components/astrify/upload/upload';
-import { Toaster } from 'sonner';
-
-function App() {
-  return (
-    <>
-      <Upload 
-        config={{
-          signedUrlEndpoint: '/upload/signed-url',
-          maxFiles: 10,
-          maxSize: 50 * 1024 * 1024, // 50MB
-          accept: 'image/*,application/pdf'
-        }}
-      />
-      <Toaster position="bottom-right" richColors />
-    </>
-  );
-}
-```
-
-### 3. Or compose your own interface with individual components
+### 2. Compose your own interface with individual components
 
 ```tsx
 import { FileUploadProvider } from '@astrify/react-s3-upload';
-import { Dropzone } from '@/components/astrify/upload/dropzone';
-import { List } from '@/components/astrify/upload/list';
-import { Errors } from '@/components/astrify/upload/errors';
+import { Dropzone, List, Errors } from '@/components/astrify/upload';
 
 function UploadSection() {
   return (
-    <FileUploadProvider 
+    <FileUploadProvider
       config={{
         signedUrlEndpoint: '/upload/signed-url',
         maxFiles: 10,
@@ -103,14 +71,12 @@ function UploadSection() {
 }
 ```
 
-### 4. Use in a form (example)
+### 3. Use in a form (example)
 
 ```tsx
 import { useState } from 'react';
 import { FileUploadProvider, useFileUpload } from '@astrify/react-s3-upload';
-import { Dropzone } from '@/components/astrify/upload/dropzone';
-import { List } from '@/components/astrify/upload/list';
-import { Errors } from '@/components/astrify/upload/errors';
+import { Dropzone, List, Errors } from '@/components/astrify/upload';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';

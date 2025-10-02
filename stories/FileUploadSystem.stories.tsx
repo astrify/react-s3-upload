@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { within } from "@storybook/test";
 import { Toaster } from "sonner";
-import { Dropzone } from "@/components/astrify/upload/dropzone";
-import { Errors } from "@/components/astrify/upload/errors";
-import { Header } from "@/components/astrify/upload/header";
-import { List } from "@/components/astrify/upload/list";
+import { Dropzone, Errors, Header, List } from "@/components/astrify/upload";
 import { FileUploadProvider } from "@/FileUploadContext";
 import {
 	createUploadFailureFake,

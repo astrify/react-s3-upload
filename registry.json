@@ -5,98 +5,10 @@
 	"author": "Ben Bjurstrom",
 	"items": [
 		{
-			"name": "dropzone",
-			"type": "registry:component",
-			"title": "Dropzone",
-			"description": "A flexible file dropzone component with drag-and-drop support, file validation, and context integration.",
-			"dependencies": [
-				"react-dropzone",
-				"lucide-react",
-				"clsx",
-				"tailwind-merge",
-				"sonner",
-				"@astrify/react-s3-upload"
-			],
-			"registryDependencies": [],
-			"files": [
-				{
-					"path": "src/components/astrify/upload/dropzone.tsx",
-					"type": "registry:component"
-				}
-			],
-			"tailwind": {
-				"config": {}
-			},
-			"cssVars": {},
-			"categories": ["upload", "form"]
-		},
-		{
-			"name": "errors",
-			"type": "registry:component",
-			"title": "Errors",
-			"description": "Error handler component that displays errors as toast notifications using sonner.",
-			"dependencies": ["sonner", "@astrify/react-s3-upload"],
-			"registryDependencies": [],
-			"files": [
-				{
-					"path": "src/components/astrify/upload/errors.tsx",
-					"type": "registry:component"
-				}
-			],
-			"tailwind": {
-				"config": {}
-			},
-			"cssVars": {},
-			"categories": ["upload", "feedback"]
-		},
-		{
-			"name": "header",
-			"type": "registry:component",
-			"title": "Header",
-			"description": "A header component for file upload UI with file count and actions.",
-			"dependencies": ["lucide-react", "clsx", "tailwind-merge"],
-			"registryDependencies": ["button"],
-			"files": [
-				{
-					"path": "src/components/astrify/upload/header.tsx",
-					"type": "registry:component"
-				}
-			],
-			"tailwind": {
-				"config": {}
-			},
-			"cssVars": {},
-			"categories": ["upload", "navigation"]
-		},
-		{
-			"name": "list",
-			"type": "registry:component",
-			"title": "List",
-			"description": "A list-based file display component showing upload status, progress, and error handling.",
-			"dependencies": [
-				"lucide-react",
-				"clsx",
-				"tailwind-merge",
-				"@astrify/react-s3-upload"
-			],
-			"registryDependencies": ["button"],
-			"files": [
-				{
-					"path": "src/components/astrify/upload/list.tsx",
-					"type": "registry:component"
-				}
-			],
-			"tailwind": {
-				"config": {}
-			},
-			"cssVars": {},
-			"categories": ["upload", "display"]
-		},
-		{
 			"name": "upload",
 			"type": "registry:block",
 			"title": "Upload",
-			"description": "A complete file upload component with dropzone, progress tracking, and error handling. Includes all upload components in one ready-to-use block.",
+			"description": "A complete file upload component with dropzone, progress tracking, and error handling. Includes all upload components in one ready-to-use file.",
 			"dependencies": [
 				"react-dropzone",
 				"lucide-react",
@@ -108,24 +20,9 @@
 			"registryDependencies": ["button"],
 			"files": [
 				{
-					"path": "src/components/astrify/upload/upload.tsx",
-					"type": "registry:component"
-				},
-				{
-					"path": "src/components/astrify/upload/dropzone.tsx",
-					"type": "registry:component"
-				},
-				{
-					"path": "src/components/astrify/upload/list.tsx",
-					"type": "registry:component"
-				},
-				{
-					"path": "src/components/astrify/upload/header.tsx",
-					"type": "registry:component"
-				},
-				{
-					"path": "src/components/astrify/upload/errors.tsx",
-					"type": "registry:component"
+					"path": "src/components/astrify/upload.tsx",
+					"type": "registry:component",
+					"target": "components/astrify/upload.tsx"
 				}
 			],
 			"tailwind": {

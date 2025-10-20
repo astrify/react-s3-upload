@@ -393,7 +393,8 @@ export function FileUploadProvider({
 						? URL.createObjectURL(file)
 						: undefined,
 				};
-			} catch {
+			} catch (error) {
+				console.error("Failed to process file", error);
 				return null;
 			}
 		},
